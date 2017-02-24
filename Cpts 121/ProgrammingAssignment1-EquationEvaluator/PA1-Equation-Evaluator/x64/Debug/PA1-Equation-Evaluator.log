@@ -1,0 +1,13 @@
+﻿  equationEvaluator.c
+c:\users\ac271\documents\cpts 121\projects\pa1-equation-evaluator\pa1-equation-evaluator\equationevaluator.c(101): warning C4244: 'function': conversion from 'double' to 'float', possible loss of data
+c:\users\ac271\documents\cpts 121\projects\pa1-equation-evaluator\pa1-equation-evaluator\equationevaluator.c(40): warning C4473: 'scanf_s' : not enough arguments passed for format string
+  c:\users\ac271\documents\cpts 121\projects\pa1-equation-evaluator\pa1-equation-evaluator\equationevaluator.c(40): note: placeholders and their parameters expect 2 variadic arguments, but 1 were provided
+  c:\users\ac271\documents\cpts 121\projects\pa1-equation-evaluator\pa1-equation-evaluator\equationevaluator.c(40): note: the missing variadic argument 2 is required by format string '%c'
+  c:\users\ac271\documents\cpts 121\projects\pa1-equation-evaluator\pa1-equation-evaluator\equationevaluator.c(40): note: this argument is used as a buffer size
+c:\users\ac271\documents\cpts 121\projects\pa1-equation-evaluator\pa1-equation-evaluator\equationevaluator.c(64): warning C4473: 'scanf_s' : not enough arguments passed for format string
+  c:\users\ac271\documents\cpts 121\projects\pa1-equation-evaluator\pa1-equation-evaluator\equationevaluator.c(64): note: placeholders and their parameters expect 2 variadic arguments, but 1 were provided
+  c:\users\ac271\documents\cpts 121\projects\pa1-equation-evaluator\pa1-equation-evaluator\equationevaluator.c(64): note: the missing variadic argument 2 is required by format string '%c'
+  c:\users\ac271\documents\cpts 121\projects\pa1-equation-evaluator\pa1-equation-evaluator\equationevaluator.c(64): note: this argument is used as a buffer size
+c:\users\ac271\documents\cpts 121\projects\pa1-equation-evaluator\pa1-equation-evaluator\equationevaluator.c(114): warning C4477: 'scanf_s' : format string '%d' requires an argument of type 'int *', but variadic argument 1 has type 'double *'
+c:\users\ac271\documents\cpts 121\projects\pa1-equation-evaluator\pa1-equation-evaluator\equationevaluator.c(116): warning C4477: 'scanf_s' : format string '%d' requires an argument of type 'int *', but variadic argument 1 has type 'double *'
+LINK : fatal error LNK1168: cannot open C:\Users\ac271\Documents\Cpts 121\Projects\PA1-Equation-Evaluator\x64\Debug\PA1-Equation-Evaluator.exe for writing

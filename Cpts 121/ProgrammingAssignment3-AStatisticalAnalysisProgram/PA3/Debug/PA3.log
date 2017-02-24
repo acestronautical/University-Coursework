@@ -1,0 +1,8 @@
+﻿  FileInOut.c
+c:\users\ac271\documents\cpts 121\projects\pa3\pa3\fileinout.c(17): warning C4996: 'fscanf': This function or variable may be unsafe. Consider using fscanf_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+  c:\program files (x86)\windows kits\10\include\10.0.10240.0\ucrt\stdio.h(1193): note: see declaration of 'fscanf'
+c:\users\ac271\documents\cpts 121\projects\pa3\pa3\fileinout.c(28): warning C4996: 'fscanf': This function or variable may be unsafe. Consider using fscanf_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+  c:\program files (x86)\windows kits\10\include\10.0.10240.0\ucrt\stdio.h(1193): note: see declaration of 'fscanf'
+c:\users\ac271\documents\cpts 121\projects\pa3\pa3\fileinout.c(79): warning C4020: 'sqrt': too many actual parameters
+  PA3.vcxproj -> C:\Users\ac271\Documents\Cpts 121\Projects\PA3\Debug\PA3.exe
+  PA3.vcxproj -> C:\Users\ac271\Documents\Cpts 121\Projects\PA3\Debug\PA3.pdb (Full PDB)
