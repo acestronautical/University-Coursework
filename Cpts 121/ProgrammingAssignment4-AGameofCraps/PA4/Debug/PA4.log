@@ -1,13 +1,2 @@
-﻿  Main.c
-c:\users\ac271\documents\github\wsu-assignments\cpts 121\programmingassignment4-agameofcraps\pa4\main.c(71): warning C4996: 'scanf': This function or variable may be unsafe. Consider using scanf_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
-  c:\program files (x86)\windows kits\10\include\10.0.10240.0\ucrt\stdio.h(1270): note: see declaration of 'scanf'
-c:\users\ac271\documents\github\wsu-assignments\cpts 121\programmingassignment4-agameofcraps\pa4\main.c(110): warning C4996: 'scanf': This function or variable may be unsafe. Consider using scanf_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
-  c:\program files (x86)\windows kits\10\include\10.0.10240.0\ucrt\stdio.h(1270): note: see declaration of 'scanf'
-  Craps.c
-c:\users\ac271\documents\github\wsu-assignments\cpts 121\programmingassignment4-agameofcraps\pa4\craps.c(49): warning C4996: 'scanf': This function or variable may be unsafe. Consider using scanf_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
-  c:\program files (x86)\windows kits\10\include\10.0.10240.0\ucrt\stdio.h(1270): note: see declaration of 'scanf'
-c:\users\ac271\documents\github\wsu-assignments\cpts 121\programmingassignment4-agameofcraps\pa4\craps.c(57): warning C4996: 'scanf': This function or variable may be unsafe. Consider using scanf_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
-  c:\program files (x86)\windows kits\10\include\10.0.10240.0\ucrt\stdio.h(1270): note: see declaration of 'scanf'
-  Generating Code...
-  PA4.vcxproj -> C:\Users\ac271\Documents\github\WSU-Assignments\Cpts 121\ProgrammingAssignment4-AGameofCraps\Debug\PA4.exe
+﻿  PA4.vcxproj -> C:\Users\ac271\Documents\github\WSU-Assignments\Cpts 121\ProgrammingAssignment4-AGameofCraps\Debug\PA4.exe
   PA4.vcxproj -> C:\Users\ac271\Documents\github\WSU-Assignments\Cpts 121\ProgrammingAssignment4-AGameofCraps\Debug\PA4.pdb (Full PDB)

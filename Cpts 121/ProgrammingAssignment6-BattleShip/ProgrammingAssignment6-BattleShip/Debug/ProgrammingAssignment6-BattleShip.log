@@ -1,0 +1,18 @@
+﻿  main.c
+c:\users\ac271\documents\github\wsu-assignments\cpts 121\programmingassignment6-battleship\programmingassignment6-battleship\main.c(14): warning C4244: 'function': conversion from 'time_t' to 'unsigned int', possible loss of data
+c:\users\ac271\documents\github\wsu-assignments\cpts 121\programmingassignment6-battleship\programmingassignment6-battleship\main.c(28): warning C4047: 'function': 'char *' differs in levels of indirection from 'char [10][10]'
+c:\users\ac271\documents\github\wsu-assignments\cpts 121\programmingassignment6-battleship\programmingassignment6-battleship\main.c(28): warning C4024: 'initialize_2d_array': different types for formal and actual parameter 1
+  Battleship.c
+c:\users\ac271\documents\github\wsu-assignments\cpts 121\programmingassignment6-battleship\programmingassignment6-battleship\battleship.c(112): warning C4047: 'function': 'char *' differs in levels of indirection from 'char (*)[10]'
+c:\users\ac271\documents\github\wsu-assignments\cpts 121\programmingassignment6-battleship\programmingassignment6-battleship\battleship.c(112): warning C4024: 'column_spaces_contain_only': different types for formal and actual parameter 5
+c:\users\ac271\documents\github\wsu-assignments\cpts 121\programmingassignment6-battleship\programmingassignment6-battleship\battleship.c(142): warning C4047: 'function': 'char *' differs in levels of indirection from 'char (*)[10]'
+c:\users\ac271\documents\github\wsu-assignments\cpts 121\programmingassignment6-battleship\programmingassignment6-battleship\battleship.c(142): warning C4024: 'row_spaces_contain_only': different types for formal and actual parameter 5
+c:\users\ac271\documents\github\wsu-assignments\cpts 121\programmingassignment6-battleship\programmingassignment6-battleship\battleship.c(184): warning C4047: 'return': 'char *' differs in levels of indirection from 'char (*)[10]'
+c:\users\ac271\documents\github\wsu-assignments\cpts 121\programmingassignment6-battleship\programmingassignment6-battleship\battleship.c(204): warning C4047: 'function': 'char *' differs in levels of indirection from 'char (*)[10]'
+c:\users\ac271\documents\github\wsu-assignments\cpts 121\programmingassignment6-battleship\programmingassignment6-battleship\battleship.c(204): warning C4024: 'column_spaces_contain_only': different types for formal and actual parameter 5
+c:\users\ac271\documents\github\wsu-assignments\cpts 121\programmingassignment6-battleship\programmingassignment6-battleship\battleship.c(216): warning C4047: 'function': 'char *' differs in levels of indirection from 'char (*)[10]'
+c:\users\ac271\documents\github\wsu-assignments\cpts 121\programmingassignment6-battleship\programmingassignment6-battleship\battleship.c(216): warning C4024: 'row_spaces_contain_only': different types for formal and actual parameter 5
+c:\users\ac271\documents\github\wsu-assignments\cpts 121\programmingassignment6-battleship\programmingassignment6-battleship\battleship.c(227): warning C4047: 'return': 'char *' differs in levels of indirection from 'char (*)[10]'
+  Generating Code...
+  ProgrammingAssignment6-BattleShip.vcxproj -> C:\Users\ac271\Documents\github\WSU-Assignments\Cpts 121\ProgrammingAssignment6-BattleShip\Debug\ProgrammingAssignment6-BattleShip.exe
+  ProgrammingAssignment6-BattleShip.vcxproj -> C:\Users\ac271\Documents\github\WSU-Assignments\Cpts 121\ProgrammingAssignment6-BattleShip\Debug\ProgrammingAssignment6-BattleShip.pdb (Full PDB)

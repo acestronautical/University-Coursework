@@ -10,31 +10,30 @@
 
 int main(void)
 {
-	//Declare variables
-	char five_dice[5] = { 3, 2, 2, 3, 3 };
-	char hold_dice[5] = { 0, 0, 0, 0, 0 };
 
-	//score indexes are as follows
-	// 0  ,   1 ,   2   ,  3   ,   4  ,   5 ,    6   ,    7  ,   8   ,   9    ,   10   ,   11  ,   12   ,   13 ,  14
-	//ones, twos, threes, fours, fives, sixs, threeof, fourof, fullhs, smallst, largest, chance, yahtzee, bonus, total
-	char scores[15] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
-	char potential_scores[15] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
-
-	//set global randomness seed variable to time
-	srand((unsigned)time(NULL));
-
-	/*for (int i = 0; i < 3; i++)
+	while (1)
 	{
-		randomize_dice(five_dice, 5, hold_dice, 5);
-		print_dice(five_dice, 5);
-		if (i < 2)
-		{
-			hold_which_dice(hold_dice, 5);
-		}
-	}*/
-	enter_to_continue();
-	potential_scoring(five_dice, 5, potential_scores, 15);
-	print_score_card(potential_scores, 15);
+		//explain game
+		print_game_rules();
+		enter_to_continue();
+		system("cls");
+		print_scoring_combinations();
 
+		//ask if want to play
+		if (!want_to_play()) { break; }
+		system("cls");
+		how_to_play();
+		enter_to_continue();
+		system("cls");
+
+		//main game loop
+		play_game();
+
+		//play again?
+		enter_to_continue();
+		system("cls");
+		if (!want_to_play()) { break; }
+	}
+	printf("\nThank you\n");
 	return 0;
 }
