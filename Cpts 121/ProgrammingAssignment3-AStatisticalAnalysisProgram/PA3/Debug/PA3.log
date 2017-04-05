@@ -1,8 +1,14 @@
-﻿  FileInOut.c
-c:\users\ac271\documents\cpts 121\projects\pa3\pa3\fileinout.c(17): warning C4996: 'fscanf': This function or variable may be unsafe. Consider using fscanf_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+﻿  Main.c
+c:\users\ac271\documents\github\wsu-assignments\cpts 121\programmingassignment3-astatisticalanalysisprogram\pa3\main.c(18): warning C4996: 'fopen': This function or variable may be unsafe. Consider using fopen_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+  c:\program files (x86)\windows kits\10\include\10.0.10240.0\ucrt\stdio.h(205): note: see declaration of 'fopen'
+c:\users\ac271\documents\github\wsu-assignments\cpts 121\programmingassignment3-astatisticalanalysisprogram\pa3\main.c(27): warning C4996: 'fopen': This function or variable may be unsafe. Consider using fopen_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+  c:\program files (x86)\windows kits\10\include\10.0.10240.0\ucrt\stdio.h(205): note: see declaration of 'fopen'
+  FileInOut.c
+c:\users\ac271\documents\github\wsu-assignments\cpts 121\programmingassignment3-astatisticalanalysisprogram\pa3\fileinout.c(17): warning C4996: 'fscanf': This function or variable may be unsafe. Consider using fscanf_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
   c:\program files (x86)\windows kits\10\include\10.0.10240.0\ucrt\stdio.h(1193): note: see declaration of 'fscanf'
-c:\users\ac271\documents\cpts 121\projects\pa3\pa3\fileinout.c(28): warning C4996: 'fscanf': This function or variable may be unsafe. Consider using fscanf_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+c:\users\ac271\documents\github\wsu-assignments\cpts 121\programmingassignment3-astatisticalanalysisprogram\pa3\fileinout.c(28): warning C4996: 'fscanf': This function or variable may be unsafe. Consider using fscanf_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
   c:\program files (x86)\windows kits\10\include\10.0.10240.0\ucrt\stdio.h(1193): note: see declaration of 'fscanf'
-c:\users\ac271\documents\cpts 121\projects\pa3\pa3\fileinout.c(79): warning C4020: 'sqrt': too many actual parameters
-  PA3.vcxproj -> C:\Users\ac271\Documents\Cpts 121\Projects\PA3\Debug\PA3.exe
-  PA3.vcxproj -> C:\Users\ac271\Documents\Cpts 121\Projects\PA3\Debug\PA3.pdb (Full PDB)
+c:\users\ac271\documents\github\wsu-assignments\cpts 121\programmingassignment3-astatisticalanalysisprogram\pa3\fileinout.c(79): warning C4020: 'sqrt': too many actual parameters
+  Generating Code...
+  PA3.vcxproj -> C:\Users\ac271\Documents\github\WSU-Assignments\Cpts 121\ProgrammingAssignment3-AStatisticalAnalysisProgram\Debug\PA3.exe
+  PA3.vcxproj -> C:\Users\ac271\Documents\github\WSU-Assignments\Cpts 121\ProgrammingAssignment3-AStatisticalAnalysisProgram\Debug\PA3.pdb (Full PDB)
