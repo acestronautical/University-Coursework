@@ -1,0 +1,10 @@
+﻿  Poker.c
+c:\users\ac271\documents\github\wsu-assignments\cpts 121\programmingassignment7-poker\programmingassignment7-poker\poker.c(148): warning C4090: 'function': different 'const' qualifiers
+c:\users\ac271\documents\github\wsu-assignments\cpts 121\programmingassignment7-poker\programmingassignment7-poker\poker.c(148): warning C4028: formal parameter 1 different from declaration
+c:\users\ac271\documents\github\wsu-assignments\cpts 121\programmingassignment7-poker\programmingassignment7-poker\poker.c(148): warning C4028: formal parameter 2 different from declaration
+c:\users\ac271\documents\github\wsu-assignments\cpts 121\programmingassignment7-poker\programmingassignment7-poker\poker.c(247): warning C4101: 'Deb_high': unreferenced local variable
+c:\users\ac271\documents\github\wsu-assignments\cpts 121\programmingassignment7-poker\programmingassignment7-poker\poker.c(247): warning C4101: 'Greg_high': unreferenced local variable
+  Main.c
+  Generating Code...
+  ProgrammingAssignment7-Poker.vcxproj -> C:\Users\ac271\Documents\github\WSU-Assignments\Cpts 121\ProgrammingAssignment7-Poker\Debug\ProgrammingAssignment7-Poker.exe
+  ProgrammingAssignment7-Poker.vcxproj -> C:\Users\ac271\Documents\github\WSU-Assignments\Cpts 121\ProgrammingAssignment7-Poker\Debug\ProgrammingAssignment7-Poker.pdb (Full PDB)
