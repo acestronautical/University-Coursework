@@ -1,0 +1,6 @@
+﻿  main.c
+c:\users\ac271\documents\github\wsu-assignments\cpts 121\programmingassignment8-interviewprobs\programmingassignment8-interviewprobs\main.c(26): warning C4013: 'getche' undefined; assuming extern returning int
+c:\users\ac271\documents\github\wsu-assignments\cpts 121\programmingassignment8-interviewprobs\programmingassignment8-interviewprobs\main.c(43): warning C4013: 'TEST_sum_primes' undefined; assuming extern returning int
+c:\users\ac271\documents\github\wsu-assignments\cpts 121\programmingassignment8-interviewprobs\programmingassignment8-interviewprobs\main.c(55): warning C4013: 'getch' undefined; assuming extern returning int
+  ProgrammingAssignment8-InterviewProbs.vcxproj -> C:\Users\ac271\Documents\github\WSU-Assignments\Cpts 121\ProgrammingAssignment8-InterviewProbs\Debug\ProgrammingAssignment8-InterviewProbs.exe
+  ProgrammingAssignment8-InterviewProbs.vcxproj -> C:\Users\ac271\Documents\github\WSU-Assignments\Cpts 121\ProgrammingAssignment8-InterviewProbs\Debug\ProgrammingAssignment8-InterviewProbs.pdb (Full PDB)

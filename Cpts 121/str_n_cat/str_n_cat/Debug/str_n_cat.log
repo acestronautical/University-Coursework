@@ -1,0 +1,5 @@
+﻿  main.c
+c:\users\ac271\documents\github\wsu-assignments\cpts 121\str_n_cat\str_n_cat\main.c(8): warning C4996: 'strncat': This function or variable may be unsafe. Consider using strncat_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+  c:\program files (x86)\windows kits\10\include\10.0.10240.0\ucrt\string.h(255): note: see declaration of 'strncat'
+  str_n_cat.vcxproj -> C:\Users\ac271\Documents\github\WSU-Assignments\Cpts 121\str_n_cat\Debug\str_n_cat.exe
+  str_n_cat.vcxproj -> C:\Users\ac271\Documents\github\WSU-Assignments\Cpts 121\str_n_cat\Debug\str_n_cat.pdb (Full PDB)
