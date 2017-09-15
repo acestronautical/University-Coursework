@@ -1,0 +1,23 @@
+﻿  main.c
+c:\users\lappy\documents\cpts 122\programmingassignment1-fitbitdata\programmingassignment1-fitbitdata\main.c(28): warning C4996: 'fopen': This function or variable may be unsafe. Consider using fopen_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+  c:\program files (x86)\windows kits\10\include\10.0.10240.0\ucrt\stdio.h(205): note: see declaration of 'fopen'
+c:\users\lappy\documents\cpts 122\programmingassignment1-fitbitdata\programmingassignment1-fitbitdata\main.c(29): warning C4996: 'fopen': This function or variable may be unsafe. Consider using fopen_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+  c:\program files (x86)\windows kits\10\include\10.0.10240.0\ucrt\stdio.h(205): note: see declaration of 'fopen'
+c:\users\lappy\documents\cpts 122\programmingassignment1-fitbitdata\programmingassignment1-fitbitdata\main.c(43): warning C4996: 'strtok': This function or variable may be unsafe. Consider using strtok_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+  c:\program files (x86)\windows kits\10\include\10.0.10240.0\ucrt\string.h(453): note: see declaration of 'strtok'
+c:\users\lappy\documents\cpts 122\programmingassignment1-fitbitdata\programmingassignment1-fitbitdata\main.c(45): warning C4996: 'strcpy': This function or variable may be unsafe. Consider using strcpy_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+  c:\program files (x86)\windows kits\10\include\10.0.10240.0\ucrt\string.h(119): note: see declaration of 'strcpy'
+c:\users\lappy\documents\cpts 122\programmingassignment1-fitbitdata\programmingassignment1-fitbitdata\main.c(46): warning C4996: 'strtok': This function or variable may be unsafe. Consider using strtok_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+  c:\program files (x86)\windows kits\10\include\10.0.10240.0\ucrt\string.h(453): note: see declaration of 'strtok'
+c:\users\lappy\documents\cpts 122\programmingassignment1-fitbitdata\programmingassignment1-fitbitdata\main.c(49): warning C4996: 'strtok': This function or variable may be unsafe. Consider using strtok_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+  c:\program files (x86)\windows kits\10\include\10.0.10240.0\ucrt\string.h(453): note: see declaration of 'strtok'
+c:\users\lappy\documents\cpts 122\programmingassignment1-fitbitdata\programmingassignment1-fitbitdata\main.c(52): warning C4996: 'strtok': This function or variable may be unsafe. Consider using strtok_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+  c:\program files (x86)\windows kits\10\include\10.0.10240.0\ucrt\string.h(453): note: see declaration of 'strtok'
+c:\users\lappy\documents\cpts 122\programmingassignment1-fitbitdata\programmingassignment1-fitbitdata\main.c(55): warning C4996: 'strtok': This function or variable may be unsafe. Consider using strtok_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+  c:\program files (x86)\windows kits\10\include\10.0.10240.0\ucrt\string.h(453): note: see declaration of 'strtok'
+c:\users\lappy\documents\cpts 122\programmingassignment1-fitbitdata\programmingassignment1-fitbitdata\main.c(58): warning C4996: 'strtok': This function or variable may be unsafe. Consider using strtok_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+  c:\program files (x86)\windows kits\10\include\10.0.10240.0\ucrt\string.h(453): note: see declaration of 'strtok'
+c:\users\lappy\documents\cpts 122\programmingassignment1-fitbitdata\programmingassignment1-fitbitdata\main.c(61): warning C4996: 'strtok': This function or variable may be unsafe. Consider using strtok_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+  c:\program files (x86)\windows kits\10\include\10.0.10240.0\ucrt\string.h(453): note: see declaration of 'strtok'
+  ProgrammingAssignment1-FitbitData.vcxproj -> C:\Users\Lappy\Documents\Cpts 122\ProgrammingAssignment1-FitbitData\Debug\ProgrammingAssignment1-FitbitData.exe
+  ProgrammingAssignment1-FitbitData.vcxproj -> C:\Users\Lappy\Documents\Cpts 122\ProgrammingAssignment1-FitbitData\Debug\ProgrammingAssignment1-FitbitData.pdb (Full PDB)
