@@ -12,9 +12,10 @@ int main() {
 	//declare stuff
 	char userinput[3] = "0";
 	int selection = 0;
-	Node *list = NULL;
+	List list = { .start = NULL, .end = NULL };
 	char* fileName = "musicplayList.csv";
-	char artist[100];
+	char inString[100];
+	Record newRecord = {NULL};
 
 	//menu loop
 	while (selection != 11) {
@@ -32,9 +33,8 @@ int main() {
 			"(11)  exit\n");
 
 		//grab user string and convert to integer
-		strcpy(userinput, fgets(userinput, 3, stdin));
-		selection = atoi(userinput);
-
+		selection = atoi(fgets(userinput, 3, stdin));
+		system("cls");
 		switch (selection)
 		{
 		case 1:
@@ -45,29 +45,45 @@ int main() {
 			break;
 		case 3:
 			printf("enter an artist name to display their songs\nor enter nothing for all songs\n");
-			fgets(artist, 100, stdin);
-			useList(artist, list, 'd');
+			fgets(inString, 100, stdin);
+			display(inString, list);
 			break;
 		case 4:
+			newRecord = stringToRecord("empty, empty, empty, empty, 0:00, 0, 0");
+			modifyRecord(&newRecord);
+			insertFront(newRecord, &list);
 			break;
 		case 5:
+			printf("enter a song name to delete song:\n");
+			fgets(inString, 100, stdin);
+			if (!deleteNode(findSong(inString, list), &list))
+				printf("no records deleted\n");
+			else
+				printf("record deleted successfully\n");
 			break;
 		case 6:
 			printf("enter an artist name to edit song fields for:\n");
-			fgets(artist, 100, stdin);
-			useList(artist, list, 'a');
+			fgets(inString, 100, stdin);
+			edit(inString, list);
 			break;
 		case 7:
+			printf(
+				"1.    Sort based on artist (A-Z)\n"
+				"2.    Sort based on album title(A - Z)\n"
+				"3.    Sort based on rating(1 - 5)\n"
+				"4.    Sort based on times played(largest - smallest))\n");
+			fgets(inString, 100, stdin);
+			sort(&list, atoi(inString));
 			break;
 		case 8:
 			printf("enter an artist name to edit song rating for:\n");
-			fgets(artist, 100, stdin);
-			useList(artist, list, 'r');
+			fgets(inString, 100, stdin);
+			rate(inString, list);
 			break;
 		case 9:
 			printf("enter a song name to find song to play:\n");
-			fgets(artist, 100, stdin);
-			useList(artist, list, 'p');
+			fgets(inString, 100, stdin);
+			play(inString, list);
 			break;
 		case 10:
 			break;
