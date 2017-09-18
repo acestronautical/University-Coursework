@@ -83,10 +83,11 @@ int main() {
 		case 9:
 			printf("enter a song name to find song to play:\n");
 			fgets(inString, 100, stdin);
-			play(inString, list);
+			Node* song = findSong(inString, list);
+			play(song);
 			break;
 		case 10:
-			shuffleList(&list);
+			shufflePlay(list);
 			break;
 		case 11:
 			storeList(fileName, list);

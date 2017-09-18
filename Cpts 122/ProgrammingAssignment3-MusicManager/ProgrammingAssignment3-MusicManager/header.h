@@ -89,10 +89,11 @@ Node* edit(char* inString, List list);
 Node* rate(char* inString, List list);
 
 //plays through from given node to end of playlist and increments playcount
-void play(char* inString, List list);
+void play(Node* song);
 
 Node* sort(List* list, int mode);
 
 char* lowercase(char* artist);
 
-Node* shuffleList(List* list);
+void shufflePlay(List list);
+

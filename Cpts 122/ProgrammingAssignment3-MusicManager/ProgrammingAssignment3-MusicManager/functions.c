@@ -375,8 +375,7 @@ Node* rate(char* inString, List list) {
 }
 
 //plays through from given node to end of playlist and increments playcount
-void play(char* inString, List list) {
-	Node* song = findSong(inString, list);
+void play(Node* song) {
 	while (song) {
 		printf("\nplaying %s\n", song->data.title);
 		song->data.playcount++;
@@ -455,34 +454,49 @@ char* lowercase(char* artist) {
 	return safeArtist;
 }
 
-Node* shuffleList(List* list) {
+void shufflePlay(List list) {
 	srand(time(NULL));
-	List shuffled = { NULL};
-	Node* thisNode = list->start;
-	Record tempRecord = { NULL };
-	int randCount = 0;
+	Node* thisNode = list.start;
+	int* shuffleArray = NULL;
 	int listLength = 0;
+	int position = 1;
+	int move = 0;
+	int temp = 0;
+	int random = 0;
 
 	while (thisNode) {
 		listLength++;
 		thisNode = thisNode->rightNode;
 	}
+	thisNode = list.start;
 
-	while (listLength > 0) {
-		thisNode = list->start;
-		randCount = rand() % listLength;
-		for (int i = 0; i < randCount; i++) {
-			thisNode = thisNode->rightNode;
-		}
-		tempRecord = thisNode->data;
-		deleteNode(thisNode, list);
-		insertFront(tempRecord, &shuffled);
-		listLength--;
+	shuffleArray = (int*)malloc(sizeof(int)*listLength);
+	for (int i = 0; i < listLength; i++)
+		shuffleArray[i] = i + 1;
+	
+	for (int i = 0; i < listLength; i++) {
+		random = rand() % listLength;
+		temp = shuffleArray[i];
+		shuffleArray[i] = shuffleArray[random];
+		shuffleArray[random] = temp;
 	}
-	list->start = shuffled.start;
-	thisNode = list->start;
-	while (thisNode->rightNode)
-		thisNode = thisNode->rightNode;
-	list->end = thisNode;
-	return list;
+
+	for (int i = 0; i < listLength; i++) {
+		move = shuffleArray[i] - position;
+		position = shuffleArray[i];
+		if (move > 0) {
+			for (int i = 0; i < move; i++)
+				thisNode = thisNode->rightNode;
+		}
+		else if (move < 0) {
+			for (int i = 0; i > move; i--)
+				thisNode = thisNode->leftNode;
+		}
+		printf("\nplaying %s\n", thisNode->data.title);
+		thisNode->data.playcount++;
+		for (int i = 0; i < 25; i++) {
+			Sleep(100);
+			printf(". ");
+		}
+	}
 }
