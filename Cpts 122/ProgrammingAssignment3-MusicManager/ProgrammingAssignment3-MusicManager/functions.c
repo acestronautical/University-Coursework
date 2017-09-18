@@ -454,3 +454,35 @@ char* lowercase(char* artist) {
 		strcpy(safeArtist, safeArtist + 1);
 	return safeArtist;
 }
+
+Node* shuffleList(List* list) {
+	srand(time(NULL));
+	List shuffled = { NULL};
+	Node* thisNode = list->start;
+	Record tempRecord = { NULL };
+	int randCount = 0;
+	int listLength = 0;
+
+	while (thisNode) {
+		listLength++;
+		thisNode = thisNode->rightNode;
+	}
+
+	while (listLength > 0) {
+		thisNode = list->start;
+		randCount = rand() % listLength;
+		for (int i = 0; i < randCount; i++) {
+			thisNode = thisNode->rightNode;
+		}
+		tempRecord = thisNode->data;
+		deleteNode(thisNode, list);
+		insertFront(tempRecord, &shuffled);
+		listLength--;
+	}
+	list->start = shuffled.start;
+	thisNode = list->start;
+	while (thisNode->rightNode)
+		thisNode = thisNode->rightNode;
+	list->end = thisNode;
+	return list;
+}

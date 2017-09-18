@@ -94,3 +94,5 @@ void play(char* inString, List list);
 Node* sort(List* list, int mode);
 
 char* lowercase(char* artist);
+
+Node* shuffleList(List* list);

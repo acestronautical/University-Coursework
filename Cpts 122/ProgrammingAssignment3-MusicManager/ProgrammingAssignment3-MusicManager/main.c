@@ -86,6 +86,7 @@ int main() {
 			play(inString, list);
 			break;
 		case 10:
+			shuffleList(&list);
 			break;
 		case 11:
 			storeList(fileName, list);
