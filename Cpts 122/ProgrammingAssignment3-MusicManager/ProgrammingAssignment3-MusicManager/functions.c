@@ -7,7 +7,7 @@
 *******************************************************************************************/
 #include "header.h"
 
-//creates a node with the entered data and returns a pointer to that node
+//creates a node with the given data and returns a pointer to that node
 //return NULL if space not available
 Node *makeNode(Record data){
 
@@ -21,6 +21,43 @@ Node *makeNode(Record data){
 		thisNode->rightNode = NULL;
 		thisNode->data = data;
 	return thisNode;
+}
+
+//makes a node with record data and then inserts it at front of doubly linked list
+int insertFront(Record data, List* list) {
+	Node* insertNode = makeNode(data);
+	if (list->start) {
+		list->start->leftNode = insertNode;
+	}
+	else
+		list->end = insertNode;
+	insertNode->rightNode = list->start;
+	list->start = insertNode;
+	return (bool)insertNode;
+}
+
+//deletes node from list and fixes list
+//returns true if node deleted successfully
+bool deleteNode(Node* deleteNode, List* list) {
+	if (!deleteNode)
+		return false;
+	if (deleteNode == list->start && deleteNode == list->end)
+		list->start = NULL, list->end = NULL;
+	else if (deleteNode == list->start) {
+		if (deleteNode->rightNode)
+			deleteNode->rightNode->leftNode = NULL;
+		list->start = deleteNode->rightNode;
+	}
+	else if (deleteNode == list->end) {
+		list->end = deleteNode->leftNode;
+		deleteNode->leftNode->rightNode = NULL;
+	}
+	else {
+		deleteNode->leftNode->rightNode = deleteNode->rightNode;
+		deleteNode->rightNode->leftNode = deleteNode->leftNode;
+	}
+	free(deleteNode);
+	return true;
 }
 
 //creates a Record struct based on a string
@@ -50,45 +87,9 @@ Record stringToRecord(char* oneLine) {
 	return newRecord;
 }
 
-//makes a node with record data and then inserts it at front of doubly linked list
-int insertFront(Record data, List* list) {
-	Node* insertNode = makeNode(data);
-	if (list->start) {
-		list->start->leftNode = insertNode;
-	}
-	else
-		list->end = insertNode;
-	insertNode->rightNode = list->start;
-	list->start = insertNode;
-	return (bool)insertNode;
-}
-
-bool deleteNode(Node* deleteNode, List* list) {
-	if (!deleteNode)
-		return false;
-	if (deleteNode == list->start && deleteNode == list->end)
-		list->start = NULL, list->end = NULL;
-	else if (deleteNode == list->start) {
-		if (deleteNode->rightNode) 
-			deleteNode->rightNode->leftNode = NULL;
-		list->start = deleteNode->rightNode;
-	}
-	else if (deleteNode == list->end) {
-		list->end = deleteNode->leftNode;
-		deleteNode->leftNode->rightNode = NULL;
-	}
-	else {
-		deleteNode->leftNode->rightNode = deleteNode->rightNode;
-		deleteNode->rightNode->leftNode = deleteNode->leftNode;
-	}
-	free(deleteNode);
-	return true;
-}
-
 //Creates nodes LIFO from file 
 int loadList(const char* fileName, List* list) {
 	char oneline[1000] = { "\0" };
-	char *token = NULL;
 	Node *newNode = NULL;
 	Record newRecord;
 	FILE* infile = NULL;
@@ -119,7 +120,7 @@ int loadList(const char* fileName, List* list) {
 	return false;
 }
 
-//writes to linked list data to csv file
+//writes linked list data to csv file
 void storeList(const char* fileName, List list) {
 	FILE* outfile = NULL;
 	Node* thisNode = list.end;
@@ -164,9 +165,20 @@ char* strtokl(char* string, const char *delimiter) {
 	return output;
 }
 
+//returns a lowercase version of given string
+//also removes leading quote mark for use with strcmp()
+char* lowercase(char* artist) {
+	char safeArtist[100] = { NULL };
+	strcpy(safeArtist, artist);
+	for (int i = 0; safeArtist[i]; ++i) safeArtist[i] = tolower(safeArtist[i]);
+	if (*safeArtist == '\"')
+		strcpy(safeArtist, safeArtist + 1);
+	return safeArtist;
+}
+
 //returns 1 if all needles were found in haystack
 //I E if all keywords were matched
-int keywordMatch(const char* haystack, const char* needles) {
+bool keywordMatch(const char* haystack, const char* needles) {
 	//copy values over into 'safe' variables
 	char safeHaystack[100];
 	strcpy(safeHaystack, haystack);
@@ -209,76 +221,7 @@ int keywordMatch(const char* haystack, const char* needles) {
 		return false;
 }
 
-//goes through record fields and allows user to edit them, returns a boolean
-bool modifyRecord(Record* data) {
-	char input[100];
-	char changeMade = false;
-	printf("Artist field currently set to: %s\n", data->artist);
-	printf("Enter new value, or press enter:\n");
-	fgets(input, 100, stdin);
-	strtok(input, "\n");
-	if (*input != '\n' && input != '\0') strcpy(data->artist, input), changeMade = true;
-	printf("Album field currently set to: %s\n", data->album);
-	printf("Enter new value, or press enter:\n");
-	fgets(input, 100, stdin);
-	strtok(input, "\n");
-	if (*input != '\n' && input != '\0') strcpy(data->album, input), changeMade = true;
-	printf("Title field currently set to: %s\n", data->title);
-	printf("Enter new value, or press enter:\n");
-	fgets(input, 100, stdin);
-	strtok(input, "\n");
-	if (*input != '\n' && input != '\0') strcpy(data->title, input), changeMade = true;
-	printf("Genre field currently set to: %s\n", data->genre);
-	printf("Enter new value, or press enter:\n");
-	fgets(input, 100, stdin);
-	strtok(input, "\n");
-	if (*input != '\n' && input != '\0') strcpy(data->genre, input), changeMade = true;
-	printf("Minutes field currently set to: %d\n", data->length.minutes);
-	printf("Enter new value, or press enter:\n");
-	fgets(input, 100, stdin);
-	strtok(input, "\n");
-	if (*input != '\n' && input != '\0') data->length.minutes = atoi(input), changeMade = true;
-	printf("Seconds field currently set to: %d\n", data->length.seconds);
-	printf("Enter new value, or press enter:\n");
-	fgets(input, 100, stdin);
-	strtok(input, "\n");
-	if (*input != '\n' && input != '\0') data->length.seconds = atoi(input), changeMade = true;
-	printf("Playcount field currently set to: %d\n", data->playcount);
-	printf("Enter new value, or press enter:\n");
-	fgets(input, 100, stdin);
-	strtok(input, "\n");
-	if (*input != '\n' && input != '\0') data->playcount = atoi(input), changeMade = true;
-	printf("Rating field currently set to: %d\n", data->rating);
-	while ((atoi(input) > 5 || atoi(input) < 1) && *input != '\n' && input != '\0') {
-		printf("Enter new value from 1-5, or press enter:\n");
-		fgets(input, 100, stdin);
-	}
-	strtok(input, "\n");
-	if (*input != '\n' && input != '\0') data->rating = atoi(input), changeMade = true;
-
-	return changeMade;
-}
-
-//allows editing of rating field of given node
-//this functionality might get refactored into inputRecord
-bool modifyRating(Record* data) {
-	char input[100] = {NULL};
-	printf("Rating field currently set to: %d\n", data->rating);
-
-	while (atoi(input) > 5 || atoi(input) < 1) {
-		printf("Enter new value from 1-5, or press enter:\n");
-		fgets(input, 100, stdin);
-	}
-
-	strtok(input, "\n");
-	if (*input != '\n' && input != '\0') {
-		data->rating = atoi(input);
-		return true;
-	}
-	else
-		return false;
-}
-
+//finds matching artists records and prompts user to select one
 Node* findArtist(char* inString, List list){
 	Node* thisNode = list.end;
 	char input[100];
@@ -311,6 +254,7 @@ Node* findArtist(char* inString, List list){
 	return NULL;
 }
 
+//finds matching songs and prompts user to select one
 Node* findSong(char* inString, List list) {
 	Node* thisNode = list.end;
 	char input[100];
@@ -343,6 +287,7 @@ Node* findSong(char* inString, List list) {
 	return NULL;
 }
 
+//displays based on entered artist, or displays all if newline or null is entered
 void display(char* inString, List list) {
 	Node* thisNode = list.end;
 	//check if nothing entered
@@ -360,6 +305,79 @@ void display(char* inString, List list) {
 	return;
 }
 
+//goes through record fields and allows user to edit them
+//returns a true if a change was made
+bool modifyRecord(Record* data) {
+	char input[100];
+	char changeMade = false;
+	do {
+		printf("Artist field currently set to: %s\n", data->artist);
+		printf("Enter new value, or press enter:\n");
+		fgets(input, 100, stdin);
+		strtok(input, "\n");
+		if (*input != '\n' && input != '\0') strcpy(data->artist, input), changeMade = true;
+	} while (!strstr(input, "\"") && strstr(input, ","));
+	do{
+		printf("Album field currently set to: %s\n", data->album);
+		printf("Enter new value, or press enter:\n");
+		fgets(input, 100, stdin);
+		strtok(input, "\n");
+		if (*input != '\n' && input != '\0') strcpy(data->album, input), changeMade = true;
+	} while (strstr(input, ","));
+	do{
+		printf("Title field currently set to: %s\n", data->title);
+		printf("Enter new value, or press enter:\n");
+		fgets(input, 100, stdin);
+		strtok(input, "\n");
+		if (*input != '\n' && input != '\0') strcpy(data->title, input), changeMade = true;
+	} while (strstr(input, ","));
+	do {
+		printf("Genre field currently set to: %s\n", data->genre);
+		printf("Enter new value, or press enter:\n");
+		fgets(input, 100, stdin);
+		strtok(input, "\n");
+		if (*input != '\n' && input != '\0') strcpy(data->genre, input), changeMade = true;
+	} while (strstr(input, ","));
+	printf("Minutes field currently set to: %d\n", data->length.minutes);
+	printf("Enter new value, or press enter:\n");
+	fgets(input, 100, stdin);
+	strtok(input, "\n");
+	if (*input != '\n' && input != '\0') data->length.minutes = atoi(input), changeMade = true;
+	printf("Seconds field currently set to: %d\n", data->length.seconds);
+	printf("Enter new value, or press enter:\n");
+	fgets(input, 100, stdin);
+	strtok(input, "\n");
+	if (*input != '\n' && input != '\0') data->length.seconds = atoi(input), changeMade = true;
+	printf("Playcount field currently set to: %d\n", data->playcount);
+	printf("Enter new value, or press enter:\n");
+	fgets(input, 100, stdin);
+	strtok(input, "\n");
+	if (*input != '\n' && input != '\0') data->playcount = atoi(input), changeMade = true;
+	modifyRating(data);
+	return changeMade;
+}
+
+//allows editing of rating field of given node
+//this functionality might get refactored
+bool modifyRating(Record* data) {
+	char input[100] = { NULL };
+	printf("Rating field currently set to: %d\n", data->rating);
+
+	while (atoi(input) > 5 || atoi(input) < 1) {
+		printf("Enter new value from 1-5, or press enter:\n");
+		fgets(input, 100, stdin);
+	}
+
+	strtok(input, "\n");
+	if (*input != '\n' && input != '\0') {
+		data->rating = atoi(input);
+		return true;
+	}
+	else
+		return false;
+}
+
+//prompts user to select a record matching the artist, then allows user to edit that record
 Node* edit(char* inString, List list) {
 	Node* thisNode = findArtist(inString, list);
 	if (thisNode)
@@ -367,6 +385,8 @@ Node* edit(char* inString, List list) {
 	return thisNode;
 }
 
+//same as edit, but only allows editing of rating field
+//possibly should be refactored somehow
 Node* rate(char* inString, List list) {
 	Node* thisNode = findArtist(inString, list);
 	if (thisNode)
@@ -389,8 +409,9 @@ void play(Node* song) {
 	return;
 }
 
-
-Node* sort(List* list, int mode) {
+//sorts list in place based on user selected criteria
+//currently implemented with bubble sort, will improve if time permits
+List* sort(List* list, int mode) {
 	Record tempRecord = { NULL };
 	Node* sortNode = list->start;
 	char string1[100] = { '\0' };
@@ -398,6 +419,12 @@ Node* sort(List* list, int mode) {
 	int int1 = 0;
 	int int2 = 0;
 	bool swaps = true;
+	//check if list present
+	if (!(sortNode)) {
+		printf("list not loaded\n");
+		return;
+	}
+
 	if (mode > 4 || mode < 1) {
 		printf("invalid selection\n");
 		return NULL;
@@ -445,15 +472,8 @@ Node* sort(List* list, int mode) {
 	return list;
 }
 
-char* lowercase(char* artist) {
-	char safeArtist[100] = { NULL };
-	strcpy(safeArtist, artist);
-	for (int i = 0; safeArtist[i]; ++i) safeArtist[i] = tolower(safeArtist[i]);
-	if (*safeArtist == '\"')
-		strcpy(safeArtist, safeArtist + 1);
-	return safeArtist;
-}
-
+//navigates through the list in a randomly determined order
+//does not modify list or create new list
 void shufflePlay(List list) {
 	srand(time(NULL));
 	Node* thisNode = list.start;
@@ -464,16 +484,19 @@ void shufflePlay(List list) {
 	int temp = 0;
 	int random = 0;
 
+	//get list length
 	while (thisNode) {
 		listLength++;
 		thisNode = thisNode->rightNode;
 	}
 	thisNode = list.start;
 
+	//declare int array of size list length and fill with consecutive values
 	shuffleArray = (int*)malloc(sizeof(int)*listLength);
 	for (int i = 0; i < listLength; i++)
 		shuffleArray[i] = i + 1;
 	
+	//perform random swaps on array to randomize values
 	for (int i = 0; i < listLength; i++) {
 		random = rand() % listLength;
 		temp = shuffleArray[i];
@@ -481,6 +504,7 @@ void shufflePlay(List list) {
 		shuffleArray[random] = temp;
 	}
 
+	//move around double linked list based on the random array values
 	for (int i = 0; i < listLength; i++) {
 		move = shuffleArray[i] - position;
 		position = shuffleArray[i];
@@ -492,6 +516,7 @@ void shufflePlay(List list) {
 			for (int i = 0; i > move; i--)
 				thisNode = thisNode->leftNode;
 		}
+		//"play" the random song
 		printf("\nplaying %s\n", thisNode->data.title);
 		thisNode->data.playcount++;
 		for (int i = 0; i < 25; i++) {
@@ -499,4 +524,5 @@ void shufflePlay(List list) {
 			printf(". ");
 		}
 	}
+	free(shuffleArray);
 }
