@@ -1,0 +1,5 @@
+﻿  Menu.cpp
+c:\users\lappy\documents\cpts 122\programmingassignment7-attendencetracker\programmingassignment7-attendencetracker\menu.cpp(216): warning C4996: 'localtime': This function or variable may be unsafe. Consider using localtime_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+  c:\program files (x86)\windows kits\10\include\10.0.10240.0\ucrt\time.h(505): note: see declaration of 'localtime'
+  ProgrammingAssignment7-AttendenceTracker.vcxproj -> C:\Users\Lappy\Documents\Cpts 122\ProgrammingAssignment7-AttendenceTracker\Debug\ProgrammingAssignment7-AttendenceTracker.exe
+  ProgrammingAssignment7-AttendenceTracker.vcxproj -> C:\Users\Lappy\Documents\Cpts 122\ProgrammingAssignment7-AttendenceTracker\Debug\ProgrammingAssignment7-AttendenceTracker.pdb (Full PDB)
