@@ -1,0 +1,5 @@
+﻿  main.cpp
+c:\users\lappy\documents\cpts 122\programmingassignment8-dataanalysisbst\programmingassignment8-dataanalysisbst\dataanalysis.h(112): error C2039: 'insert': is not a member of 'BST<TransactionNode>'
+  c:\users\lappy\documents\cpts 122\programmingassignment8-dataanalysisbst\programmingassignment8-dataanalysisbst\dataanalysis.h(44): note: see declaration of 'BST<TransactionNode>'
+c:\users\lappy\documents\cpts 122\programmingassignment8-dataanalysisbst\programmingassignment8-dataanalysisbst\dataanalysis.h(114): error C2039: 'insert': is not a member of 'BST<TransactionNode>'
+  c:\users\lappy\documents\cpts 122\programmingassignment8-dataanalysisbst\programmingassignment8-dataanalysisbst\dataanalysis.h(44): note: see declaration of 'BST<TransactionNode>'
