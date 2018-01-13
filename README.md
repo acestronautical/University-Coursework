@@ -6,4 +6,4 @@ If you are a potential employer feel free to email with any questions
 
 thank you
 
-(Some projects have Repli.it live demos, I am working on adding demos for all projects)
+(Some projects have repl.it live demos, I am working on adding demos for all projects)
