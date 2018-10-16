@@ -1,10 +1,9 @@
 from functools import reduce
+import random
 import unittest
 import sys
             
 # P1 A
-
-# helper
 
 
 def addDicts(d1, d2):
@@ -119,8 +118,7 @@ def lookupVal2(tL, k):
             return t[1][k]
         if t == tL[0]:
             return None
-        else:
-            t = tL[t[0]]
+        t = tL[t[0]]
 
 
 class TestLookupVal2(unittest.TestCase):
@@ -149,6 +147,7 @@ class TestLookupVal2(unittest.TestCase):
 
 def numPaths(m, n, blocks):
     paths = 0
+    
     def robot(x, y):
         nonlocal paths
         if x == m and y == n:
@@ -160,9 +159,9 @@ def numPaths(m, n, blocks):
         else:
             robot(x + 1, y)
             robot(x, y + 1)
-        return paths
-    return robot(1, 1)
-
+        return
+    robot(1, 1)
+    return paths
 
 class TestNumPaths(unittest.TestCase):
     def test(self):
@@ -301,7 +300,7 @@ class TestIMerge(unittest.TestCase):
 # P6 A
 
 
-class Stream(object):
+class Stream():
     def __init__(self, first, compute_rest, empty=False):
         self.first = first
         self._compute_rest = compute_rest
@@ -318,19 +317,45 @@ class Stream(object):
         return self._rest
 
 
-def make_integer_stream(first=1):
+def streamRandoms(k, _min, _max):
     def compute_rest():
-        return make_integer_stream(first+1)
-    return Stream(first, compute_rest)
+        return streamRandoms(random.randint(_min, _max), _min, _max)
+    return Stream(k, compute_rest)
+
+class TestStreamRandoms(unittest.TestCase):
+    def test(self):
+        self.stream1 = streamRandoms(1,1, 100)
+        self.stream1List = []
+        for _ in range (0,50):
+            self.stream1List.append(self.stream1.first)
+            self.stream1 = self.stream1.rest
+
+        for num in self.stream1List:
+            self.assertTrue(1 <= num <= 100)
 
 
-empty_stream = Stream(None, None, True)
+# P6 B
 
+def oddStream(inStream):
+    def compute_rest():
+        nonlocal inStream
+        while inStream.first % 2 == 0:
+            inStream = inStream.rest
+        return oddStream(inStream)
+    return Stream(inStream.first, compute_rest)
 
-def streamRandoms(k, min, max):
-    return
+class TestOddStream(unittest.TestCase):
+    def test(self):
+        self.stream1 = oddStream(streamRandoms(1,1, 100))
+        self.stream1List = []
+        for _ in range (0,50):
+            self.stream1List.append(self.stream1.first)
+            self.stream1 = self.stream1.rest
+
+        for num in self.stream1List:
+            self.assertTrue( num % 2 != 0)
 
 
 if __name__ == '__main__':
-  suite = unittest.TestLoader().loadTestsFromModule( sys.modules[__name__] )
-  unittest.TextTestRunner(verbosity=3).run( suite )
+    suite = unittest.TestLoader().loadTestsFromModule( sys.modules[__name__] )
+    unittest.TextTestRunner(verbosity=3).run( suite )
