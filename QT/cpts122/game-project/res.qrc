@@ -1,0 +1,15 @@
+<RCC>
+    <qresource prefix="/sounds">
+        <file>techno.wma</file>
+    </qresource>
+    <qresource prefix="/images">
+        <file>Stars_Background.png</file>
+        <file>javaCup.png</file>
+        <file>Andy.png</file>
+        <file>Wsu_Background.png</file>
+        <file>C_logo.png</file>
+        <file>Splash_screen.png</file>
+        <file>javaCup2.png</file>
+        <file>javaCup3.png</file>
+    </qresource>
+</RCC>
