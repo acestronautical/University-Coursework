@@ -1,40 +1,27 @@
 import re
-# ------------------------- 10% ------------------------------------
-# # The operand stack: define the operand stack and its operations
 
-opstack = []
-dictstack = [{}]
+# ------------------------- 00% ------------------------------------
+# # Utility Functions
 
 
-# now define functions to push and pop values to the top of to/from the top of
-# the stack (end of the list). Recall that `pass` in Python is a space holder: replace it with your code.
-
-
-def opPopN(N):
-    if len(opstack) >= N:
-        return tuple(opstack.pop() for _ in range(0, N))
+def popN(D, N):
+    if len(D) >= N:
+        if N == 1:
+            return D.pop()
+        else:
+            return tuple(D.pop() for _ in range(0, N))
     else:
-        raise IndexError("attempt to pop opstack bottom")
+        raise IndexError("attempt to pop stack bottom")
 
 
-def opPop():
-    return opPopN(1)[0]
-
-
-def opPushN(*items):
+def pushN(D, *items):
     for item in items:
-        opstack.append(item)
+        D.append(item)
+
+# ------------------------- 00% ------------------------------------
+# # Type Checking
 
 
-def opPush(item):
-    opPushN(item)
-
-# Remember that there is a Postscript operator called "pop" so we choose
-# different names for these functions.
-
- # --------------------------  ------------------------------------
- # # Type checking: check popped types are valid
- 
 def checkIsBool(*items):
     for item in items:
         if not isinstance(item, bool):
@@ -53,7 +40,6 @@ def checkIsNumber(*items):
             raise TypeError("cannot perform operation on non number type")
 
 
-
 def checkIsList(*items):
     for item in items:
         if not isinstance(item, list):
@@ -65,26 +51,46 @@ def checkIsDict(*items):
         if not isinstance(item, dict):
             raise TypeError("cannot perform operation on non dict type")
 
+# ------------------------- 10% ------------------------------------
+# # The operand stack: define the operand stack and its operations
+
+
+opstack = []
+
+
+def opPopN(N):
+    return popN(opstack, N)
+
+
+def opPop():
+    return opPopN(1)
+
+
+def opPushN(*items):
+    pushN(opstack, *items)
+
+
+def opPush(item):
+    opPushN(item)
 
 
  # -------------------------- 20% ------------------------------------
  # # The dictionary stack: define the dictionary stack and its operations
 
 
+dictstack = [{}]
+
+
 def dictPopN(N):
-    if len(dictstack) >= N:
-        return tuple(dictstack.pop() for _ in range(0, N))
-    else:
-        raise IndexError("attempt to pop dictstack bottom")
+    return popN(dictstack, N)
 
 
 def dictPop():
-    return dictPopN(1)[0]
+    return dictPopN(1)
 
 
 def dictPushN(*items):
-    for item in items:
-        dictstack.append(item)
+    pushN(dictstack, *items)
 
 
 def dictPush(item):
@@ -191,6 +197,7 @@ def length():
     checkIsList(L)
     opPush(len(L))
 
+
 def get():
     opand2, opand1 = opPopN(2)
     checkIsList(opand1)
@@ -201,7 +208,6 @@ def get():
 # --------------------------- 15% ------------------------------------
 # # Boolean operators: define the boolean operators psAnd, psOr, psNot
 # Remember that these take boolean operands only. Anything else is an error
-
 
 
 def psAnd():
@@ -264,6 +270,7 @@ def stack():
 # and call your own "define" operator (pass those values as parameters).
 # Note that psDef()won't have any parameters.
 
+
 def psDict():
     opand1 = opPop()
     checkIsInteger(opand1)
@@ -302,6 +309,7 @@ def testDefine():
         return False
     return True
 
+
 def testLookup():
     opPush("/n1")
     opPush(3)
@@ -310,7 +318,9 @@ def testLookup():
         return False
     return True
 
-#Arithmatic operator tests
+# Arithmatic operator tests
+
+
 def testAdd():
     opPush(1)
     opPush(2)
@@ -318,6 +328,7 @@ def testAdd():
     if opPop() != 3:
         return False
     return True
+
 
 def testSub():
     opPush(10)
@@ -327,6 +338,7 @@ def testSub():
         return False
     return True
 
+
 def testMul():
     opPush(2)
     opPush(4.5)
@@ -335,6 +347,7 @@ def testMul():
         return False
     return True
 
+
 def testDiv():
     opPush(10)
     opPush(4)
@@ -342,8 +355,10 @@ def testDiv():
     if opPop() != 2.5:
         return False
     return True
-    
-#Comparison operators tests
+
+# Comparison operators tests
+
+
 def testEq():
     opPush(6)
     opPush(6)
@@ -351,6 +366,7 @@ def testEq():
     if opPop() != True:
         return False
     return True
+
 
 def testLt():
     opPush(3)
@@ -360,6 +376,7 @@ def testLt():
         return False
     return True
 
+
 def testGt():
     opPush(3)
     opPush(6)
@@ -368,7 +385,9 @@ def testGt():
         return False
     return True
 
-#boolean operator tests
+# boolean operator tests
+
+
 def testPsAnd():
     opPush(True)
     opPush(False)
@@ -376,6 +395,7 @@ def testPsAnd():
     if opPop() != False:
         return False
     return True
+
 
 def testPsOr():
     opPush(True)
@@ -385,6 +405,7 @@ def testPsOr():
         return False
     return True
 
+
 def testPsNot():
     opPush(True)
     psNot()
@@ -392,46 +413,54 @@ def testPsNot():
         return False
     return True
 
-#Array operator tests
+# Array operator tests
+
+
 def testLength():
-    opPush([1,2,3,4,5])
+    opPush([1, 2, 3, 4, 5])
     length()
     if opPop() != 5:
         return False
     return True
 
+
 def testGet():
-    opPush([1,2,3,4,5])
+    opPush([1, 2, 3, 4, 5])
     opPush(4)
     get()
     if opPop() != 5:
         return False
     return True
 
-#stack manipulation functions
+# stack manipulation functions
+
+
 def testDup():
     opPush(10)
     dup()
-    if opPop()!=opPop():
+    if opPop() != opPop():
         return False
     return True
+
 
 def testExch():
     opPush(10)
     opPush("/x")
     exch()
-    if opPop()!=10 and opPop()!="/x":
+    if opPop() != 10 and opPop() != "/x":
         return False
     return True
+
 
 def testPop():
     l1 = len(opstack)
     opPush(10)
     pop()
-    l2= len(opstack)
-    if l1!=l2:
+    l2 = len(opstack)
+    if l1 != l2:
         return False
     return True
+
 
 def testCopy():
     opPush(1)
@@ -441,25 +470,29 @@ def testCopy():
     opPush(5)
     opPush(2)
     copy()
-    if opPop()!=5 and opPop()!=4 and opPop()!=5 and opPop()!=4 and opPop()!=3 and opPop()!=2:
+    if opPop() != 5 and opPop() != 4 and opPop() != 5 and opPop() != 4 and opPop() != 3 and opPop() != 2:
         return False
     return True
+
 
 def testClear():
     opPush(10)
     opPush("/x")
     clear()
-    if len(opstack)!=0:
+    if len(opstack) != 0:
         return False
     return True
 
-#dictionary stack operators
+# dictionary stack operators
+
+
 def testDict():
     opPush(1)
     psDict()
-    if opPop()!={}:
+    if opPop() != {}:
         return False
     return True
+
 
 def testBeginEnd():
     opPush("/x")
@@ -471,17 +504,19 @@ def testBeginEnd():
     opPush(4)
     psDef()
     end()
-    if lookup("x")!=3:
+    if lookup("x") != 3:
         return False
     return True
+
 
 def testpsDef():
     opPush("/x")
     opPush(10)
     psDef()
-    if lookup("x")!=10:
+    if lookup("x") != 10:
         return False
     return True
+
 
 def testpsDef2():
     opPush("/x")
@@ -490,7 +525,7 @@ def testpsDef2():
     opPush(1)
     psDict()
     begin()
-    if lookup("x")!=10:
+    if lookup("x") != 10:
         end()
         return False
     end()
@@ -498,12 +533,15 @@ def testpsDef2():
 
 
 def main_part1():
-    testCases = [('define',testDefine),('lookup',testLookup),('add', testAdd), ('sub', testSub),('mul', testMul),('div', testDiv), \
-                 ('eq',testEq),('lt',testLt),('gt', testGt), ('psAnd', testPsAnd),('psOr', testPsOr),('psNot', testPsNot), \
-                 ('length', testLength),('get', testGet), ('dup', testDup), ('exch', testExch), ('pop', testPop), ('copy', testCopy), \
+    testCases = [('define', testDefine), ('lookup', testLookup), ('add', testAdd), ('sub', testSub), ('mul', testMul), ('div', testDiv),
+                 ('eq', testEq), ('lt', testLt), ('gt', testGt), ('psAnd',
+                                                                  testPsAnd), ('psOr', testPsOr), ('psNot', testPsNot),
+                 ('length', testLength), ('get', testGet), ('dup',
+                                                            testDup), ('exch', testExch), ('pop', testPop), ('copy', testCopy),
                  ('clear', testClear), ('dict', testDict), ('begin', testBeginEnd), ('psDef', testpsDef), ('psDef2', testpsDef2)]
     # add you test functions to this list along with suitable names
-    failedTests = [testName for (testName, testProc) in testCases if not testProc()]
+    failedTests = [testName for (testName, testProc)
+                   in testCases if not testProc()]
     if failedTests:
         return ('Some tests failed', failedTests)
     else:
