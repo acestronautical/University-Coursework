@@ -1,4 +1,12 @@
 import re
+from enum import Enum
+
+# ------------------------- Globals ------------------------------------
+
+opstack = []
+
+dictstack = [{}]
+
 
 # ------------------------- Utility ------------------------------------
 # # Utility Functions: pop, push
@@ -55,9 +63,6 @@ def checkIsDict(*items):
 # # Operand Stack Functions: opPop, opPopN, opPush, opPushN
 
 
-opstack = []
-
-
 def opPopN(N):
     return popN(opstack, N)
 
@@ -75,9 +80,6 @@ def opPush(item):
 
  # -------------------------- Dictionary Stack ------------------------------------
  # # Dictionary Stack Functions: dictPop, dictPopN, dictPush, dictPushN , define, lookup
-
-
-dictstack = [{}]
 
 
 def dictPopN(N):
@@ -265,118 +267,216 @@ def psDef():
     define(name, value)
 
 
- # --------------------------- TEST FUNCTIONS ----------------------------------
+ # --------------------------- Lexing and Parsing ----------------------------------
+ # # Tokenizing, Group Matching, Classification
+
+tokenRx = re.compile(r'''
+    (\s+) |                       # whitespace
+    (\d+\.\d+) |                  # float
+    (\d+) |                       # integer
+    (true|false) |                # boolean
+    (\[[0-9\s\.]*\]) |         # array
+    (add|sub|mul|div|neg|eq|lt|gt|and|or|not|length|get|dup|exch|pop|copy|clear|dict|begin|end|def|stack) |# operator
+    (/[A-Za-z_][A-Za-z0-9_]*) |   # name
+    ([A-Za-z_][A-Za-z0-9_]*) |    # variable
+    ({) |                         # left brace
+    (}) |                         # right brace
+    (.)                           # an error!
+    ''', re.DOTALL | re.VERBOSE)
+
+    
+s_to_op = {
+    'add': add, 
+    'sub': sub, 
+    'mul': mul, 
+    'div': div,
+    'neg': neg,
+    'eq': eq, 
+    'lt': lt, 
+    'gt': gt, 
+    'and': psAnd,
+    'or': psOr,
+    'not': psNot,
+    'length': length,
+    'get': get, 
+    'dup': dup, 
+    'exch': exch, 
+    'pop': pop, 
+    'copy': copy,
+    'clear': clear, 
+    'dict': psDict, 
+    'begin': begin, 
+    'end': end, 
+    'def': psDef, 
+    'stack': stack,
+    }
+
+class token_type(Enum):
+        floating = 1
+        integer = 2 
+        boolean = 3
+        array = 9
+        operator = 4
+        name = 5
+        variable =6
+        left_brace = 7
+        right_brace = 8
+        code_block = 9
+        
+
+class Token:
+    def __init__(self, token_type, token_data):
+        self.token_type = token_type
+        self.token_data = token_data
+
+class Tokenizer:
+    def __init__(self, s):
+         self.matches = re.finditer(tokenRx, s)
+
+    def __iter__(self):
+        for match in self.matches:
+            space, floatingS, integerS, booleanS, arrayS, operatorS, \
+            nameS, variableS, left_braceS, right_braceS, unknownS = match.groups()
+            if space:
+                pass
+            elif floatingS:
+                self.current = Token(token_type.floating, float(floatingS))
+            elif integerS:
+                self.current = Token(token_type.integer, int(integerS))
+            elif booleanS:
+                self.current = Token(token_type.boolean, bool(booleanS))
+            elif arrayS:
+                self.current = Token(token_type.array, list(arrayS))
+            elif operatorS:
+                self.current = Token(token_type.operator, s_to_op[operatorS])
+            elif nameS:
+                self.current = Token(token_type.name, nameS)            
+            elif variableS:
+                self.current = Token(token_type.variable, variableS)                        
+            elif left_braceS:
+                self.current = Token(token_type.left_brace, left_braceS)
+            elif right_braceS:
+                self.current = Token( token_type.right_brace, right_braceS)
+            elif unknownS: 
+                raise NameError
+            yield self.current
+
+
+def groupMatching(it):
+    token_sublist = []
+    for t in it:
+        if t.token_type == token_type.right_brace:
+            return Token(token_type.code_block, token_sublist)
+        elif t.token_type == token_type.left_brace:
+            token_sublist.append(groupMatching(it))
+        else:
+            token_sublist.append(t)
+    return False
+
+def parse(s):
+    token_list = []
+    tIter = Tokenizer(s)
+    for t in tIter:
+        if t.token_type == token_type.right_brace:
+            return False
+        elif t.token_type == token_type.left_brace:
+            token_list.append(groupMatching(tIter))
+        else:
+            token_list.append(t)
+    return token_list
+
+
+ # --------------------------- Interpreter ----------------------------------
+ # # Run output of parsing
+
+def interpreter(s):
+    token_list = parse(s)
+    for t in token_list:
+        if t.token_type == token_type.variable:
+            opPush(lookup(t.token_data))
+        elif t.token_type == token_type.operator:
+            t.token_data()
+        else:
+            opPush(t.token_data)
+
+ # --------------------------- Test Functions ----------------------------------
  # # Include your test functions here
 
 def testDefine():
     define("/n1", 4)
-    if lookup("n1") != 4:
-        return False
-    return True
+    return lookup("n1") == 4
 
 
 def testLookup():
-    opPush("/n1")
-    opPush(3)
+    opPushN("/n1", 3)
     psDef()
-    if lookup("n1") != 3:
-        return False
-    return True
+    return lookup("n1") == 3
 
 # Arithmatic operator tests
 
 
 def testAdd():
-    opPush(1)
-    opPush(2)
+    opPushN(1, 2)
     add()
-    if opPop() != 3:
-        return False
-    return True
+    return opPop() == 3
 
 
 def testSub():
-    opPush(10)
-    opPush(4.5)
+    opPushN(10, 4.5)
     sub()
-    if opPop() != 5.5:
-        return False
-    return True
+    return opPop() == 5.5
 
 
 def testMul():
-    opPush(2)
-    opPush(4.5)
+    opPushN(2, 4.5)
     mul()
-    if opPop() != 9:
-        return False
-    return True
+    return opPop() == 9
 
 
 def testDiv():
-    opPush(10)
-    opPush(4)
+    opPushN(10, 4)
     div()
-    if opPop() != 2.5:
-        return False
-    return True
+    return opPop() == 2.5
 
 # Comparison operators tests
 
 
 def testEq():
-    opPush(6)
-    opPush(6)
+    opPushN(6, 6)
     eq()
-    if opPop() != True:
-        return False
-    return True
+    return opPop() == True
 
 
 def testLt():
-    opPush(3)
-    opPush(6)
+    opPushN(3, 6)
     lt()
-    if opPop() != True:
-        return False
-    return True
+    return opPop() == True
 
 
 def testGt():
-    opPush(3)
-    opPush(6)
+    opPushN(3, 6)
     gt()
-    if opPop() != False:
-        return False
-    return True
+    return opPop() == False
 
 # boolean operator tests
 
 
 def testPsAnd():
-    opPush(True)
-    opPush(False)
+    opPushN(True, False)
     psAnd()
-    if opPop() != False:
-        return False
-    return True
+    return opPop() == False
 
 
 def testPsOr():
-    opPush(True)
-    opPush(False)
+    opPushN(True, False)
     psOr()
-    if opPop() != True:
-        return False
-    return True
+    return opPop() == True
 
 
 def testPsNot():
     opPush(True)
     psNot()
-    if opPop() != False:
-        return False
-    return True
+    return opPop() == False
 
 # Array operator tests
 
@@ -384,18 +484,14 @@ def testPsNot():
 def testLength():
     opPush([1, 2, 3, 4, 5])
     length()
-    if opPop() != 5:
-        return False
-    return True
+    return opPop() == 5
 
 
 def testGet():
     opPush([1, 2, 3, 4, 5])
     opPush(4)
     get()
-    if opPop() != 5:
-        return False
-    return True
+    return opPop() == 5
 
 # stack manipulation functions
 
@@ -403,18 +499,14 @@ def testGet():
 def testDup():
     opPush(10)
     dup()
-    if opPop() != opPop():
-        return False
-    return True
+    return opPop() == opPop()
 
 
 def testExch():
     opPush(10)
     opPush("/x")
     exch()
-    if opPop() != 10 and opPop() != "/x":
-        return False
-    return True
+    return opPop() == 10 and opPop() == "/x"
 
 
 def testPop():
@@ -422,31 +514,19 @@ def testPop():
     opPush(10)
     pop()
     l2 = len(opstack)
-    if l1 != l2:
-        return False
-    return True
+    return l1 == l2
 
 
 def testCopy():
-    opPush(1)
-    opPush(2)
-    opPush(3)
-    opPush(4)
-    opPush(5)
-    opPush(2)
+    opPushN(1, 2, 3, 4, 5, 2)
     copy()
-    if opPop() != 5 and opPop() != 4 and opPop() != 5 and opPop() != 4 and opPop() != 3 and opPop() != 2:
-        return False
-    return True
+    return opPop() == 5 and opPop() == 4 and opPop() == 5 and opPop() == 4 and opPop() == 3 and opPop() == 2
 
 
 def testClear():
-    opPush(10)
-    opPush("/x")
+    opPushN(10, "/x")
     clear()
-    if len(opstack) != 0:
-        return False
-    return True
+    return len(opstack) == 0
 
 # dictionary stack operators
 
@@ -454,14 +534,11 @@ def testClear():
 def testDict():
     opPush(1)
     psDict()
-    if opPop() != {}:
-        return False
-    return True
+    return opPop() == {}
 
 
 def testBeginEnd():
-    opPush("/x")
-    opPush(3)
+    opPushN("/x", 3)
     psDef()
     opPush({})
     begin()
@@ -469,18 +546,13 @@ def testBeginEnd():
     opPush(4)
     psDef()
     end()
-    if lookup("x") != 3:
-        return False
-    return True
+    return lookup("x") == 3
 
 
 def testpsDef():
-    opPush("/x")
-    opPush(10)
+    opPushN("/x", 10)
     psDef()
-    if lookup("x") != 10:
-        return False
-    return True
+    return lookup("x") == 10
 
 
 def testpsDef2():
@@ -496,22 +568,47 @@ def testpsDef2():
     end()
     return True
 
+# Lexing tests
 
-def main_part1():
-    testCases = [('define', testDefine), ('lookup', testLookup), ('add', testAdd), ('sub', testSub), ('mul', testMul), ('div', testDiv),
-                 ('eq', testEq), ('lt', testLt), ('gt', testGt), ('psAnd',
-                                                                  testPsAnd), ('psOr', testPsOr), ('psNot', testPsNot),
-                 ('length', testLength), ('get', testGet), ('dup',
-                                                            testDup), ('exch', testExch), ('pop', testPop), ('copy', testCopy),
-                 ('clear', testClear), ('dict', testDict), ('begin', testBeginEnd), ('psDef', testpsDef), ('psDef2', testpsDef2)]
+def testGroup():
+    return parse("{{}{{}}}") == [[[], [[]]]]
+
+
+ # --------------------------- Main Function ----------------------------------
+
+def test_results():
+    testCases = [
+    ('define', testDefine), 
+    ('lookup', testLookup), 
+    ('add', testAdd), 
+    ('sub', testSub), 
+    ('mul', testMul), 
+    ('div', testDiv),
+    ('eq', testEq), 
+    ('lt', testLt), 
+    ('gt', testGt), 
+    ('psAnd', testPsAnd),
+    ('psOr', testPsOr),
+    ('psNot', testPsNot),
+    ('length', testLength),
+    ('get', testGet), 
+    ('dup', testDup), 
+    ('exch', testExch), 
+    ('pop', testPop), 
+    ('copy', testCopy),
+    ('clear', testClear), 
+    ('dict', testDict), 
+    ('begin', testBeginEnd), 
+    ('psDef', testpsDef), 
+    ('psDef2', testpsDef2),
+    ('group', testGroup),
+    ]
     # add you test functions to this list along with suitable names
-    failedTests = [testName for (testName, testProc)
-                   in testCases if not testProc()]
+    failedTests = [testName for (testName, testProc) in testCases if not testProc()]
     if failedTests:
         return ('Some tests failed', failedTests)
     else:
-        return ('All part-1 tests OK')
-
-
+        return ('All tests OK')
+        
 if __name__ == '__main__':
-    print(main_part1())
+    print(test_results())
