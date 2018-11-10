@@ -1,5 +1,4 @@
 import re
-from enum import Enum
 
 # ------------------------- Globals ------------------------------------
 
@@ -106,7 +105,7 @@ def define(name, value):
 
 
 def lookup(name):
-    for dic in dictstack:
+    for dic in dictstack[::-1]:
         if "/" + name in dic:
             return dic["/" + name]
     raise ValueError("attempt to access undefined name")
@@ -207,6 +206,41 @@ def psNot():
     checkIsBool(opand1)
     opPush(not opand1)
 
+# --------------------------- Data Flow Operators ------------------------------------
+# # Looping and conditionals: if, elseif, for, forall
+def psIf():
+    # <bool> <code-array> if
+    opand2, opand1 = opPopN(2)
+    checkIsBool(opand1)
+    if opand1:
+        interpret(opand2.data)
+
+def psIfElse():
+    # <bool> <code-array1> <code-array2> ifelse
+    opand3, opand2, opand1 = opPopN(3)
+    checkIsBool(opand1)
+    if opand1:
+        interpret(opand2.data)
+    else:
+        interpret(opand3.data)
+
+def psFor():
+    # <init> <incr> <final> <code array> for 
+    opand4, opand3, opand2, opand1 = opPopN(4)
+    checkIsInteger(opand1, opand2, opand3)
+    while opand1 != opand3:
+        opPush(opand1)
+        interpret(opand4.data)
+        opand1 += opand2
+    opPush(opand1)
+    interpret(opand4.data)
+    
+
+def psForall():
+    opand2, opand1 = opPopN(2)
+    for item in opand1:
+        opPush(item)
+        interpret(opand2.data)
 
 # --------------------------- Operand Stack Manipulation ------------------------------------
 # # Stack Manipulation and Print Functions: dup, exch, pop, copy, clear, stack
@@ -239,7 +273,7 @@ def clear():
 
 
 def stack():
-    for item in opstack:
+    for item in opstack[::-1]:
         print(item)
 
 # --------------------------- Dictionary Stack Manipulation ------------------------------------
@@ -266,141 +300,158 @@ def psDef():
     value, name = opPopN(2)
     define(name, value)
 
-
  # --------------------------- Lexing and Parsing ----------------------------------
  # # Tokenizing, Group Matching, Classification
 
-tokenRx = re.compile(r'''
-    (\s+) |                       # whitespace
-    (\d+\.\d+) |                  # float
-    (\d+) |                       # integer
-    (true|false) |                # boolean
-    (\[[0-9\s\.]*\]) |         # array
-    (add|sub|mul|div|neg|eq|lt|gt|and|or|not|length|get|dup|exch|pop|copy|clear|dict|begin|end|def|stack) |# operator
-    (/[A-Za-z_][A-Za-z0-9_]*) |   # name
-    ([A-Za-z_][A-Za-z0-9_]*) |    # variable
-    ({) |                         # left brace
-    (}) |                         # right brace
-    (.)                           # an error!
+
+token_pattern = re.compile(r'''
+    (?P<space>\s+) |                       # whitespace
+    (?P<floating>-?\d+\.\d+) |             # float
+    (?P<integer>-?\d+) |                   # integer
+    (?P<boolean>true|false) |              # boolean
+    (?P<array>\[[0-9\s\.]*\]) |            # array
+    (?P<name>/[A-Za-z_][A-Za-z0-9_]*) |    # name
+    (?P<operator>add|sub|mul|div|neg|eq|lt|gt|and|or|not|length|get|dup|exch|pop|copy|clear|dict|begin|end|def|stack|ifelse|if|forall|for) |# operator
+    (?P<variable>[A-Za-z_][A-Za-z0-9_]*) | # variable
+    (?P<left_brace>{) |                    # left brace
+    (?P<right_brace>}) |                   # right brace
+    (?P<unknown>.)                         # an error!
     ''', re.DOTALL | re.VERBOSE)
 
-    
-s_to_op = {
-    'add': add, 
-    'sub': sub, 
-    'mul': mul, 
+
+functionof = {
+    'add': add,
+    'sub': sub,
+    'mul': mul,
     'div': div,
     'neg': neg,
-    'eq': eq, 
-    'lt': lt, 
-    'gt': gt, 
+    'eq': eq,
+    'lt': lt,
+    'gt': gt,
     'and': psAnd,
     'or': psOr,
     'not': psNot,
     'length': length,
-    'get': get, 
-    'dup': dup, 
-    'exch': exch, 
-    'pop': pop, 
+    'get': get,
+    'dup': dup,
+    'exch': exch,
+    'pop': pop,
     'copy': copy,
-    'clear': clear, 
-    'dict': psDict, 
-    'begin': begin, 
-    'end': end, 
-    'def': psDef, 
+    'clear': clear,
+    'dict': psDict,
+    'begin': begin,
+    'end': end,
+    'def': psDef,
     'stack': stack,
-    }
+    'if': psIf,
+    'ifelse': psIfElse,
+    'for': psFor,
+    'forall': psForall,
+}
 
-class token_type(Enum):
-        floating = 1
-        integer = 2 
-        boolean = 3
-        array = 9
-        operator = 4
-        name = 5
-        variable =6
-        left_brace = 7
-        right_brace = 8
-        code_block = 9
-        
+class operator: 
+    def __init__(self, operator):
+        self.data = operator
 
-class Token:
-    def __init__(self, token_type, token_data):
-        self.token_type = token_type
-        self.token_data = token_data
+class variable: 
+    def __init__(self, variable):
+        self.data = variable
+
+class left_brace:
+    def __init__(self, left_brace):
+        self.data = left_brace
+
+class right_brace:
+    def __init__(self, right_brace):
+        self.data = right_brace
+
+class code_block:
+    def __init__(self, code_block):
+        self.data = code_block
 
 class Tokenizer:
     def __init__(self, s):
-         self.matches = re.finditer(tokenRx, s)
+        self.matches = re.finditer(token_pattern, s)
 
     def __iter__(self):
         for match in self.matches:
-            space, floatingS, integerS, booleanS, arrayS, operatorS, \
-            nameS, variableS, left_braceS, right_braceS, unknownS = match.groups()
-            if space:
-                pass
-            elif floatingS:
-                self.current = Token(token_type.floating, float(floatingS))
-            elif integerS:
-                self.current = Token(token_type.integer, int(integerS))
-            elif booleanS:
-                self.current = Token(token_type.boolean, bool(booleanS))
-            elif arrayS:
-                self.current = Token(token_type.array, list(arrayS))
-            elif operatorS:
-                self.current = Token(token_type.operator, s_to_op[operatorS])
-            elif nameS:
-                self.current = Token(token_type.name, nameS)            
-            elif variableS:
-                self.current = Token(token_type.variable, variableS)                        
-            elif left_braceS:
-                self.current = Token(token_type.left_brace, left_braceS)
-            elif right_braceS:
-                self.current = Token( token_type.right_brace, right_braceS)
-            elif unknownS: 
+            if match.group("space"):
+                continue
+            elif match.group("floating"):
+                self.current = float(match.group("floating"))
+            elif match.group("integer"):
+                self.current = int(match.group("integer"))
+            elif match.group("boolean"):
+                self.current = bool(match.group("boolean"))
+            elif match.group("array"):
+                self.current = [eval(item) for item in match.group("array")[1:-1].split()]
+            elif match.group("name"):
+                self.current = match.group("name")
+            elif match.group("operator"):
+                self.current = operator(functionof[match.group("operator")])
+            elif match.group("variable"):
+                self.current = variable(match.group("variable"))
+            elif match.group("left_brace"):
+                self.current = left_brace(match.group("left_brace"))
+            elif match.group("right_brace"):
+                self.current = right_brace(match.group("right_brace"))
+            elif match.group("unknown"):
                 raise NameError
+            else:
+                continue
             yield self.current
 
+def group(it):
+    token_list = []
+    for t in it:
+        if type(t) is right_brace:
+            return False
+        elif type(t) is left_brace:
+            token_list.append(group_helper(it))
+        else:
+            token_list.append(t)
+    return token_list
 
-def groupMatching(it):
+def group_helper(it):
     token_sublist = []
     for t in it:
-        if t.token_type == token_type.right_brace:
-            return Token(token_type.code_block, token_sublist)
-        elif t.token_type == token_type.left_brace:
-            token_sublist.append(groupMatching(it))
+        if type(t) is right_brace:
+            return code_block(token_sublist)
+        elif type(t) is left_brace:
+            token_sublist.append(group_helper(it))
         else:
             token_sublist.append(t)
     return False
 
 def parse(s):
-    token_list = []
-    tIter = Tokenizer(s)
-    for t in tIter:
-        if t.token_type == token_type.right_brace:
-            return False
-        elif t.token_type == token_type.left_brace:
-            token_list.append(groupMatching(tIter))
-        else:
-            token_list.append(t)
-    return token_list
-
+    it = Tokenizer(s)
+    return group(it)
 
  # --------------------------- Interpreter ----------------------------------
  # # Run output of parsing
 
+
 def interpreter(s):
-    token_list = parse(s)
-    for t in token_list:
-        if t.token_type == token_type.variable:
-            opPush(lookup(t.token_data))
-        elif t.token_type == token_type.operator:
-            t.token_data()
+    tokens = parse(s)
+    interpret(tokens)
+
+def interpret(tokens):
+    for t in tokens:
+        if type(t) is variable:
+            val = lookup(t.data)
+            if type(val) is code_block:
+                interpret(val.data)
+            else:
+                opPush(val)
+        elif type(t) is operator:
+            t.data()
         else:
-            opPush(t.token_data)
+            opPush(t)
+
 
  # --------------------------- Test Functions ----------------------------------
  # # Include your test functions here
+
 
 def testDefine():
     define("/n1", 4)
@@ -569,46 +620,65 @@ def testpsDef2():
     return True
 
 # Lexing tests
-
-def testGroup():
-    return parse("{{}{{}}}") == [[[], [[]]]]
-
+def testInterpreter():
+    interpreter("5 4 add")
+    if opPop() != 9:
+        return False
+    interpreter("[9 9 8 4 10] { } forall")
+    if opPopN(5) != (10, 4, 8, 9, 9):
+        return False
+    interpreter("[1 2 3 4 5] dup length exch {dup mul}  forall add add add add exch 0 exch -1 1 {dup mul add} for eq") 
+    if opPop() != True:
+        return False
+    interpreter("/x 3 def x 3 eq {x   1    add} {x   1    sub} ifelse")
+    if opPop() != 4:
+        return False
+    interpreter("/square {dup mul} def  [1 2 3 4] {square} forall add add add 30 eq true")
+    if opPopN(2) != (True, True):
+        return False
+    interpreter("[1 2 3 4 5] dup length /n exch def /fact { 0 dict begin /n exch def n 2 lt { 1} {n 1 sub fact n mul } ifelse end } def n fact")    
+    if opPopN(2) != (120, [1, 2, 3, 4, 5]):
+        return False
+    return True
 
  # --------------------------- Main Function ----------------------------------
 
+
 def test_results():
     testCases = [
-    ('define', testDefine), 
-    ('lookup', testLookup), 
-    ('add', testAdd), 
-    ('sub', testSub), 
-    ('mul', testMul), 
-    ('div', testDiv),
-    ('eq', testEq), 
-    ('lt', testLt), 
-    ('gt', testGt), 
-    ('psAnd', testPsAnd),
-    ('psOr', testPsOr),
-    ('psNot', testPsNot),
-    ('length', testLength),
-    ('get', testGet), 
-    ('dup', testDup), 
-    ('exch', testExch), 
-    ('pop', testPop), 
-    ('copy', testCopy),
-    ('clear', testClear), 
-    ('dict', testDict), 
-    ('begin', testBeginEnd), 
-    ('psDef', testpsDef), 
-    ('psDef2', testpsDef2),
-    ('group', testGroup),
+        ('define', testDefine),
+        ('lookup', testLookup),
+        ('add', testAdd),
+        ('sub', testSub),
+        ('mul', testMul),
+        ('div', testDiv),
+        ('eq', testEq),
+        ('lt', testLt),
+        ('gt', testGt),
+        ('psAnd', testPsAnd),
+        ('psOr', testPsOr),
+        ('psNot', testPsNot),
+        ('length', testLength),
+        ('get', testGet),
+        ('dup', testDup),
+        ('exch', testExch),
+        ('pop', testPop),
+        ('copy', testCopy),
+        ('clear', testClear),
+        ('dict', testDict),
+        ('begin', testBeginEnd),
+        ('psDef', testpsDef),
+        ('psDef2', testpsDef2),
+        ('interpreter', testInterpreter),
     ]
     # add you test functions to this list along with suitable names
-    failedTests = [testName for (testName, testProc) in testCases if not testProc()]
+    failedTests = [testName for (testName, testProc)
+                   in testCases if not testProc()]
     if failedTests:
         return ('Some tests failed', failedTests)
     else:
         return ('All tests OK')
-        
+
+
 if __name__ == '__main__':
     print(test_results())
