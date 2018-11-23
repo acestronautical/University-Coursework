@@ -5,10 +5,11 @@ from enum import Enum
 
 
 class mode(Enum):
+    postScript = 0
     dynamic = 1
     static = 2
 
-scopingMode = mode.dynamic
+scopingMode = mode.postScript
 
 opstack = []
 
@@ -297,8 +298,18 @@ def clear():
 
 
 def stack():
-    for item in opstack[::-1]:
-        print(item)
+    print("==============")
+    for opand in opstack[::-1]:
+        print(opand)
+    print("==============")
+    idx = len(dictstack) -1
+    while idx >= 0:
+        frame = dictstack[idx]
+        print(f"Frame {idx} -> {frame.parent}")
+        for key, val in frame.dict.items():
+            print(f"{key}   {val}")
+        idx -= 1
+    print("==============")
 
 # --------------------------- Dictionary Stack Manipulation --------------
 # # Dictionary Manipulation Functions: psDict, begin, end, psDef
@@ -378,12 +389,17 @@ class operator:
 
     def __init__(self, operator):
         self.data = operator
-
+    
+    def __str__(self):
+        return self.data.__name__
 
 class variable:
 
     def __init__(self, variable):
         self.data = variable
+
+    def __str__(self):
+        return str(self.data)
 
 
 class left_brace:
@@ -403,7 +419,12 @@ class code_block:
     def __init__(self, code_block, scope = 0):
         self.data = code_block
         self.scope = scope
-
+        
+    def __str__(self):
+        string = ""
+        for item in self.data:
+            string += str(item) + " "
+        return string
 
 class Tokenizer:
 
@@ -473,15 +494,19 @@ def parse(s):
 
 def setMode(s):
     global scopingMode
-    if s == "dynamic" or s == mode.dynamic:
+    if s == "postscript" or s == mode.postScript:
+        scopingMode = mode.postScript
+    elif s == "dynamic" or s == mode.dynamic:
         scopingMode = mode.dynamic
     elif s == "static" or s == mode.static:
         scopingMode = mode.static
     else:
-        raise ValueError("valid modes are 'static' or 'dynamic'")
+        raise ValueError("valid modes are 'postscript' 'static' or 'dynamic'")
 
 
-def interpreter(s, mode="dynamic"):
+def interpreter(s, mode="postscript"):
+    global dictstack
+    dictstack = [frame(-1)]
     setMode(mode)
     tokens = parse(s)
     interpret(tokens)
@@ -492,12 +517,14 @@ def interpret(tokens):
         if type(t) is variable:
             val = lookup(t.data)
             if type(val) is code_block:
-                if scopingMode == mode.static:
+                if scopingMode == mode.dynamic:
+                    dictPush(frame(len(dictstack) - 1))
+                elif scopingMode == mode.static:
                     dictPush(frame(val.scope))
                 
                 interpret(val.data)
                 
-                if scopingMode == mode.static:
+                if scopingMode == mode.static or scopingMode == mode.dynamic:
                     dictPop()
             else:
                 opPush(val)
@@ -679,7 +706,7 @@ def testpsDef2():
 # Lexing tests
 
 
-def testInterpreterDynamic():
+def testInterpreterPostScript():
     interpreter("5 4 add")
     if opPop() != 9:
         return False
@@ -704,14 +731,29 @@ def testInterpreterDynamic():
     return True
 
 
-def testInterpreterStatic():
-    case1 = "/x 4 def /g { x } def /f { /x 7 def g } def f"
-    interpreter(case1, "dynamic")
-    if opPop() != 7:
-        return False
+def testInterpreterStaticDynamic():
+    case1 = "/x 4 def /g { x stack } def /f { /x 7 def g } def f"
     interpreter(case1, "static")
     if opPop() != 4:
         return False
+    interpreter(case1, "dynamic")
+    if opPop() != 7:
+        return False
+    case2 = "/m  50 def /n  100 def /egg1 {/m 25 def n} def /chic { /n 1 def /egg2 { n } def m  n egg1 egg2 stack } def n chic"
+    interpreter(case2, "static")
+    if opPopN(5) != (1, 100, 1, 50, 100):
+        return False
+    interpreter(case2, "dynamic")
+    if opPopN(5) != (1, 1, 1, 50, 100):
+        return False    
+    case3 = "/x 10 def /A { x } def /C { /x 40 def A stack } def /B { /x 30 def /A { x } def C } def B"
+    interpreter(case3, "static")
+    if opPop() != (10):
+        return False
+    interpreter(case3, "dynamic")
+    if opPop() != (40):
+        return False    
+
     return True
 
  # --------------------------- Main Function ----------------------------------
@@ -742,8 +784,8 @@ def test_results():
         ('begin', testBeginEnd),
         ('psDef', testpsDef),
         ('psDef2', testpsDef2),
-        ('interpreterDynamic', testInterpreterDynamic),
-        ('interpreterStatic', testInterpreterStatic),
+        ('interpreterPostScript', testInterpreterPostScript),
+        ('interpreterStaticDynamic', testInterpreterStaticDynamic),
     ]
     # add you test functions to this list along with suitable names
     failedTests = [testName for (testName, testProc)
