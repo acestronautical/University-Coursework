@@ -3,15 +3,25 @@ import re
 from enum import Enum
 # ------------------------- Globals ------------------------------------
 
-class mode(Enum):
-    Dynamic = 1
-    Static = 2
 
-interpretMode = mode.Dynamic
+class mode(Enum):
+    dynamic = 1
+    static = 2
+
+scopingMode = mode.dynamic
 
 opstack = []
 
-dictstack = [{}]
+class frame:
+
+    def __init__(self, parent, dictionary = None):
+        self.parent = parent
+        if dictionary is None:
+            self.dict = {}
+        else:
+            self.dict = dictionary
+
+dictstack = [frame(-1)]
 
 # ------------------------- Utility ------------------------------------
 # # Utility Functions: pop, push
@@ -83,7 +93,7 @@ def opPushN(*items):
 def opPush(item):
     opPushN(item)
 
- # -------------------------- Dictionary Stack ------------------------------------
+ # -------------------------- Dictionary Stack ----------------------------
  # # Dictionary Stack Functions: dictPop, dictPopN, dictPush, dictPushN , define, lookup
 
 
@@ -105,19 +115,22 @@ def dictPush(item):
 
 def define(name, value):
     if isinstance(name, str) and name[0] == "/":
-        dictstack[-1][name] = value
+        dictstack[-1].dict[name] = value
     else:
         raise TypeError("name is not a valid string")
 
 
 def lookup(name):
-    for dic in dictstack[::-1]:
-        if "/" + name in dic:
-            return dic["/" + name]
-    raise ValueError("attempt to access undefined name")
+    frame = dictstack[-1]
+    while True:
+        if "/" + name in frame.dict:
+            return frame.dict["/" + name]
+        if frame.parent < 0:
+            raise ValueError("attempt to access undefined name")
+        frame = dictstack[frame.parent]
 
 
-# --------------------------- Arithmetic Operators ------------------------------------
+# --------------------------- Arithmetic Operators -----------------------
 # # Arithmetic Operator Functions: sub, add, div, mul, mod, neg, gt, lt, eq
 
 
@@ -175,7 +188,7 @@ def eq():
     opPush(opand1 == opand2)
 
 
-# --------------------------- Array Operators ------------------------------------
+# --------------------------- Array Operators ----------------------------
 # # Array Operators Functions: length, get
 
 def length():
@@ -191,7 +204,7 @@ def get():
     opPush(opand1[opand2])
 
 
-# --------------------------- Boolean Operators ------------------------------------
+# --------------------------- Boolean Operators --------------------------
 # # Boolean Operator Functions: psAnd, psOr, psNot
 
 
@@ -212,14 +225,17 @@ def psNot():
     checkIsBool(opand1)
     opPush(not opand1)
 
-# --------------------------- Data Flow Operators ------------------------------------
+# --------------------------- Data Flow Operators ------------------------
 # # Looping and conditionals: if, elseif, for, forall
+
+
 def psIf():
     # <bool> <code-array> if
     opand2, opand1 = opPopN(2)
     checkIsBool(opand1)
     if opand1:
         interpret(opand2.data)
+
 
 def psIfElse():
     # <bool> <code-array1> <code-array2> ifelse
@@ -230,8 +246,9 @@ def psIfElse():
     else:
         interpret(opand3.data)
 
+
 def psFor():
-    # <init> <incr> <final> <code array> for 
+    # <init> <incr> <final> <code array> for
     opand4, opand3, opand2, opand1 = opPopN(4)
     checkIsInteger(opand1, opand2, opand3)
     while opand1 != opand3:
@@ -240,7 +257,7 @@ def psFor():
         opand1 += opand2
     opPush(opand1)
     interpret(opand4.data)
-    
+
 
 def psForall():
     opand2, opand1 = opPopN(2)
@@ -248,8 +265,9 @@ def psForall():
         opPush(item)
         interpret(opand2.data)
 
-# --------------------------- Operand Stack Manipulation ------------------------------------
+# --------------------------- Operand Stack Manipulation -----------------
 # # Stack Manipulation and Print Functions: dup, exch, pop, copy, clear, stack
+
 
 def dup():
     opand1 = opPop()
@@ -282,7 +300,7 @@ def stack():
     for item in opstack[::-1]:
         print(item)
 
-# --------------------------- Dictionary Stack Manipulation ------------------------------------
+# --------------------------- Dictionary Stack Manipulation --------------
 # # Dictionary Manipulation Functions: psDict, begin, end, psDef
 
 
@@ -295,7 +313,7 @@ def psDict():
 def begin():
     opand1 = opPop()
     checkIsDict(opand1)
-    dictPush(opand1)
+    dictPush(frame(len(dictstack) - 1, opand1))
 
 
 def end():
@@ -306,7 +324,7 @@ def psDef():
     value, name = opPopN(2)
     define(name, value)
 
- # --------------------------- Lexing and Parsing ----------------------------------
+ # --------------------------- Lexing and Parsing -------------------------
  # # Tokenizing, Group Matching, Classification
 
 
@@ -355,27 +373,40 @@ functionof = {
     'forall': psForall,
 }
 
-class operator: 
+
+class operator:
+
     def __init__(self, operator):
         self.data = operator
 
-class variable: 
+
+class variable:
+
     def __init__(self, variable):
         self.data = variable
 
+
 class left_brace:
+
     def __init__(self, left_brace):
         self.data = left_brace
 
+
 class right_brace:
+
     def __init__(self, right_brace):
         self.data = right_brace
 
+
 class code_block:
-    def __init__(self, code_block):
+
+    def __init__(self, code_block, scope = 0):
         self.data = code_block
+        self.scope = scope
+
 
 class Tokenizer:
+
     def __init__(self, s):
         self.matches = re.finditer(token_pattern, s)
 
@@ -407,27 +438,30 @@ class Tokenizer:
                 continue
             yield self.current
 
+
 def group(it):
     token_list = []
     for t in it:
         if type(t) is right_brace:
             return False
         elif type(t) is left_brace:
-            token_list.append(group_helper(it))
+            token_list.append(group_helper(it, 0))
         else:
             token_list.append(t)
     return token_list
 
-def group_helper(it):
+
+def group_helper(it, scope):
     token_sublist = []
     for t in it:
         if type(t) is right_brace:
-            return code_block(token_sublist)
+            return code_block(token_sublist, scope)
         elif type(t) is left_brace:
-            token_sublist.append(group_helper(it))
+            token_sublist.append(group_helper(it, scope + 1))
         else:
             token_sublist.append(t)
     return False
+
 
 def parse(s):
     it = Tokenizer(s)
@@ -436,26 +470,35 @@ def parse(s):
  # --------------------------- Interpreter ----------------------------------
  # # Run output of parsing
 
+
 def setMode(s):
-    global interpretMode
-    if s == "dynamic" or s == mode.Dynamic:
-        interpretMode = mode.Dynamic
-    elif s == "static" or s == mode.Static:
-        interpretMode = mode.Static
+    global scopingMode
+    if s == "dynamic" or s == mode.dynamic:
+        scopingMode = mode.dynamic
+    elif s == "static" or s == mode.static:
+        scopingMode = mode.static
     else:
         raise ValueError("valid modes are 'static' or 'dynamic'")
 
-def interpreter(s, mode = "dynamic"):
-    setMode(mode) 
+
+def interpreter(s, mode="dynamic"):
+    setMode(mode)
     tokens = parse(s)
     interpret(tokens)
+
 
 def interpret(tokens):
     for t in tokens:
         if type(t) is variable:
             val = lookup(t.data)
             if type(val) is code_block:
+                if scopingMode == mode.static:
+                    dictPush(frame(val.scope))
+                
                 interpret(val.data)
+                
+                if scopingMode == mode.static:
+                    dictPop()
             else:
                 opPush(val)
         elif type(t) is operator:
@@ -463,8 +506,7 @@ def interpret(tokens):
         else:
             opPush(t)
 
-
- # --------------------------- Test Functions ----------------------------------
+ # --------------------------- Test Functions -----------------------------
  # # Include your test functions here
 
 
@@ -635,31 +677,37 @@ def testpsDef2():
     return True
 
 # Lexing tests
-def testInterpreter():
+
+
+def testInterpreterDynamic():
     interpreter("5 4 add")
     if opPop() != 9:
         return False
     interpreter("[9 9 8 4 10] { } forall")
     if opPopN(5) != (10, 4, 8, 9, 9):
         return False
-    interpreter("[1 2 3 4 5] dup length exch {dup mul}  forall add add add add exch 0 exch -1 1 {dup mul add} for eq") 
+    interpreter(
+        "[1 2 3 4 5] dup length exch {dup mul}  forall add add add add exch 0 exch -1 1 {dup mul add} for eq")
     if opPop() != True:
         return False
     interpreter("/x 3 def x 3 eq {x   1    add} {x   1    sub} ifelse")
     if opPop() != 4:
         return False
-    interpreter("/square {dup mul} def  [1 2 3 4] {square} forall add add add 30 eq true")
+    interpreter(
+        "/square {dup mul} def  [1 2 3 4] {square} forall add add add 30 eq true")
     if opPopN(2) != (True, True):
         return False
-    interpreter("[1 2 3 4 5] dup length /n exch def /fact { 0 dict begin /n exch def n 2 lt { 1} {n 1 sub fact n mul } ifelse end } def n fact")    
+    interpreter(
+        "[1 2 3 4 5] dup length /n exch def /fact { 0 dict begin /n exch def n 2 lt { 1} {n 1 sub fact n mul } ifelse end } def n fact")
     if opPopN(2) != (120, [1, 2, 3, 4, 5]):
         return False
     return True
 
+
 def testInterpreterStatic():
-    case1 = "/x 4 def /u { x stack } def /f { /x 7 def g } def f"
+    case1 = "/x 4 def /g { x } def /f { /x 7 def g } def f"
     interpreter(case1, "dynamic")
-    if opPop() != 7: 
+    if opPop() != 7:
         return False
     interpreter(case1, "static")
     if opPop() != 4:
@@ -694,7 +742,8 @@ def test_results():
         ('begin', testBeginEnd),
         ('psDef', testpsDef),
         ('psDef2', testpsDef2),
-        ('interpreter', testInterpreter),
+        ('interpreterDynamic', testInterpreterDynamic),
+        ('interpreterStatic', testInterpreterStatic),
     ]
     # add you test functions to this list along with suitable names
     failedTests = [testName for (testName, testProc)
