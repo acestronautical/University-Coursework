@@ -311,7 +311,7 @@ token_pattern = re.compile(r'''
     (?P<boolean>true|false) |              # boolean
     (?P<array>\[[0-9\s\.]*\]) |            # array
     (?P<name>/[A-Za-z_][A-Za-z0-9_]*) |    # name
-    (?P<operator>add|sub|mul|div|neg|eq|lt|gt|and|or|not|length|get|dup|exch|pop|copy|clear|dict|begin|end|def|stack|ifelse|if|forall|for) |# operator
+    (?P<operator>add\b|sub\b|mul\b|div\b|neg\b|eq\b|lt\b|gt\b|and\b|or\b|not\b|length\b|get\b|dup\b|exch\b|pop\b|copy\b|clear\b|dict\b|begin\b|end\b|def\b|stack\b|ifelse\b|if\b|forall\b|for\b) |# operator
     (?P<variable>[A-Za-z_][A-Za-z0-9_]*) | # variable
     (?P<left_brace>{) |                    # left brace
     (?P<right_brace>}) |                   # right brace
@@ -624,20 +624,35 @@ def testInterpreter():
     interpreter("5 4 add")
     if opPop() != 9:
         return False
+    clear()
     interpreter("[9 9 8 4 10] { } forall")
     if opPopN(5) != (10, 4, 8, 9, 9):
         return False
+    clear()
     interpreter("[1 2 3 4 5] dup length exch {dup mul}  forall add add add add exch 0 exch -1 1 {dup mul add} for eq") 
     if opPop() != True:
         return False
+    clear()
     interpreter("/x 3 def x 3 eq {x   1    add} {x   1    sub} ifelse")
     if opPop() != 4:
         return False
+    clear()
     interpreter("/square {dup mul} def  [1 2 3 4] {square} forall add add add 30 eq true")
     if opPopN(2) != (True, True):
         return False
+    clear()
     interpreter("[1 2 3 4 5] dup length /n exch def /fact { 0 dict begin /n exch def n 2 lt { 1} {n 1 sub fact n mul } ifelse end } def n fact")    
     if opPopN(2) != (120, [1, 2, 3, 4, 5]):
+        return False
+    clear()
+    interpreter("""
+    /add2 {/add1 { 1 add} def add1 add1} def
+    /add3 {add2 add1} def
+    /add4 {add2 add2} def
+    0 add4 add3 add2 add1 
+    stack
+    """)    
+    if opPop() != (10):
         return False
     return True
 

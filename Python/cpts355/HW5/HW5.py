@@ -421,10 +421,7 @@ class code_block:
         self.scope = scope
         
     def __str__(self):
-        string = ""
-        for item in self.data:
-            string += str(item) + " "
-        return string
+       return ''.join([str(item) + " " for item in self.data])
 
 class Tokenizer:
 
@@ -727,6 +724,15 @@ def testInterpreterPostScript():
     interpreter(
         "[1 2 3 4 5] dup length /n exch def /fact { 0 dict begin /n exch def n 2 lt { 1} {n 1 sub fact n mul } ifelse end } def n fact")
     if opPopN(2) != (120, [1, 2, 3, 4, 5]):
+        return False
+    interpreter("""
+    /add2 {/add1 { 1 add} def add1 add1} def
+    /add3 {add2 add1} def
+    /add4 {add2 add2} def
+    0 add4 add3 add2 add1 
+    stack
+    """)    
+    if opPop() != (10):
         return False
     return True
 
