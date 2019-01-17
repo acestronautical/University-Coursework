@@ -1,0 +1,71 @@
+-------------main-------------
+&argc=ff952a40 argv=ff952ad4 env=ff952ae8
+&a=ff9529fc &b=ff952a00 &c=ff952a04
+argc=4
+argv[0]=./a.out argv[1]=one argv[2]=two argv[3]=three 
+-------------A-------------
+&d=ff9529b0 &e=ff9529b4 &f=ff9529b8
+-------------B-------------
+&g=ff952980 &h=ff952984 &i=ff952988
+-------------C-------------
+&u=ff952948 &v=ff95294c &w=ff952950 &i=ff952954
+-------------Stack Frames-------------
+ff952968 =>ff952998 =>ff9529c8 =>ff952a28 => null
+
+-------------Stack Contents-------------
+Adress ff952958 -> Hex ff952958
+Adress ff95295c -> Hex e7079100
+Adress ff952960 -> Hex ff952a40
+Adress ff952964 -> Hex 565c1fcc
+Adress ff952968 -> Hex ff952998
+Adress ff95296c -> Hex 565c081b
+Adress ff952970 -> Hex 7
+Adress ff952974 -> Hex 8
+Adress ff952978 -> Hex ff952984
+Adress ff95297c -> Hex ff952988
+Adress ff952980 -> Hex 7
+Adress ff952984 -> Hex 8
+Adress ff952988 -> Hex 9
+Adress ff95298c -> Hex e7079100
+Adress ff952990 -> Hex ff952a40
+Adress ff952994 -> Hex 565c1fcc
+Adress ff952998 -> Hex ff9529c8
+Adress ff95299c -> Hex 565c0780
+Adress ff9529a0 -> Hex 4
+Adress ff9529a4 -> Hex 5
+Adress ff9529a8 -> Hex ff9529b4
+Adress ff9529ac -> Hex ff9529b8
+Adress ff9529b0 -> Hex 4
+Adress ff9529b4 -> Hex 5
+Adress ff9529b8 -> Hex 6
+Adress ff9529bc -> Hex e7079100
+Adress ff9529c0 -> Hex ff952a40
+Adress ff9529c4 -> Hex 565c1fcc
+Adress ff9529c8 -> Hex ff952a28
+Adress ff9529cc -> Hex 565c06db
+Adress ff9529d0 -> Hex 1
+Adress ff9529d4 -> Hex 2
+Adress ff9529d8 -> Hex ff953ff3
+Adress ff9529dc -> Hex ff952a04
+Adress ff9529e0 -> Hex 9
+Adress ff9529e4 -> Hex ff953fe3
+Adress ff9529e8 -> Hex ff952ae8
+Adress ff9529ec -> Hex ff952ad4
+Adress ff9529f0 -> Hex f7f41000
+Adress ff9529f4 -> Hex f7f41000
+Adress ff9529f8 -> Hex 0
+Adress ff9529fc -> Hex 1
+Adress ff952a00 -> Hex 2
+Adress ff952a04 -> Hex 3
+Adress ff952a08 -> Hex 4
+Adress ff952a0c -> Hex e7079100
+Adress ff952a10 -> Hex 4
+Adress ff952a14 -> Hex ff952ad4
+Adress ff952a18 -> Hex ff952ae8
+Adress ff952a1c -> Hex ff952a40
+Adress ff952a20 -> Hex 0
+Adress ff952a24 -> Hex f7f41000
+Adress ff952a28 -> Hex 0
+!exit B
+!exit A
+!exit main
