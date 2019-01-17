@@ -1,4 +1,3 @@
-#pragma once
 #include "lab1.h"
 
 int main(int argc, char *argv[], char *env[])

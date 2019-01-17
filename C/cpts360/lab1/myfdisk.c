@@ -81,7 +81,6 @@
 // (2). including ALL the extend partitions (%60) <== YOU BETTER DO THIS !!!!.
 
 // Turn in a printed HARD COPY containing your work.
-#pragma once
 #include "lab1.h"
 
 void myfdisk(char *file)

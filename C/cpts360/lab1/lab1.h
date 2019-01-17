@@ -2,6 +2,9 @@
 
 #pragma once
 #include <sys/fcntl.h>
+#include <unistd.h>
+#include <stdio.h>
+#include <stdlib.h>
 
 typedef unsigned char  u8;
 typedef unsigned short u16;

@@ -1,7 +1,6 @@
 //Author: Ace Cassidy
 
 // PART 2: myprintf Function
-#pragma once
 #include "lab1.h"
 
 
