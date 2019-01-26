@@ -2,8 +2,11 @@
 
 int main(int argc, char const *argv[]) {
   // initialize globals
-  cwd = root = &(node){
-      .name = "/", .type = DIR, .child = NULL, .sibling = NULL, .parent = NULL};
+  cwd = root = &(node){.name = "/",
+                       .type = _DIR,
+                       .child = NULL,
+                       .sibling = NULL,
+                       .parent = NULL};
 
   // vars
   char userInput[128], commandName[16], pathName[64], cwdName[64] = "/";
@@ -23,8 +26,9 @@ int main(int argc, char const *argv[]) {
       continue;
 
     // identify the command;
-    if (commandPtr = findCmd(commandName))
-      if (commandPtr(pathName) != EXIT_SUCCESS)
-        printf("command failed");
+    if (!(commandPtr = findCmd(commandName)))
+      printf("command not recognized: %s", commandName);
+    else if (commandPtr(pathName) != EXIT_SUCCESS)
+      printf("command failed");
   }
 }

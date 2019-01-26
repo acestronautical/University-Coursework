@@ -5,8 +5,8 @@
 #include <stdlib.h>
 #include <string.h>
 
-#define DIR 'D'
-#define FILE 'F'
+#define _DIR 'D'
+#define _FILE 'F'
 #define loop while (1)
 
 // types
