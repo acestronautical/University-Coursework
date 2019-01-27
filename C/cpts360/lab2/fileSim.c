@@ -19,12 +19,14 @@ node *searchNode(char *path) {
   if (*path == '/')
     cur = root;
   char *s = strtok(path, "/");
-  if (!strcmp(s, ".")) {
-    cur = cwd;
-    s = strtok(0, "/");
-  } else if (!strcmp(s, "..")) {
-    cur = cwd->parent;
-    s = strtok(0, "/");
+  if (s) {
+    if (!strcmp(s, ".")) {
+      cur = cwd;
+      s = strtok(0, "/");
+    } else if (!strcmp(s, "..")) {
+      cur = cwd->parent;
+      s = strtok(0, "/");
+    }
   }
   while (s) {
     cur = cur->child;
@@ -186,7 +188,22 @@ int save(char *pathName) {
   return EXIT_SUCCESS;
 }
 
-int reload(char *pathName) { return EXIT_SUCCESS; }
+int reload(char *pathName) {
+  char line[128], type[2], path[128];
+  FILE *fp = fopen(pathName, "r");
+  if (!fp)
+    return EXIT_FAILURE;
+  while (!feof(fp)) {
+    fgets(line, 128, fp);
+    sscanf(line, "%s %s", type, path);
+    if (*type == _DIR)
+      mkdir(path);
+    else if (*type == _FILE)
+      creat(path);
+  }
+  fclose(fp);
+  return EXIT_SUCCESS;
+}
 
 int menu(char *pathName) {
   printf("mkdir pathname  :make a new directory for a given pathname\n"
