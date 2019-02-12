@@ -24,7 +24,7 @@ NOTE: LAB#3 PreWork require you to turn in a harcopy of your code
         When a new proc starts to execute body(), print the myname string,
              which should be YOUR name.
 
-        When body() ends, e.g. by a null command string, retrun to do_exit();
+        When body() ends, e.g. by a null command string, return to do_exit();
 
   HINT: AS IF the proc has CALLED body(), passing myname as parameter.
 
@@ -34,7 +34,7 @@ NOTE: LAB#3 PreWork require you to turn in a harcopy of your code
 (3). Implement  kexit(int exitValue):
        P1 never die;
        give away children, if any, to P1
-       record exitValue in proc's exitCode;
+       record exitValue in procs exitCode;
        become a ZOMBIE;
        wakeup parent (by parent proc address);
        tswitch();
@@ -52,7 +52,7 @@ NOTE: LAB#3 PreWork require you to turn in a harcopy of your code
         }
 
 (5). Add a "wait" command and a do_wait() function to allow (running) proc to 
-     wait for a ZOMBIE child; print the ZOMBIE child's pid and exit status.
+     wait for a ZOMBIE child; print the ZOMBIE childs pid and exit status.
 
  
 4. DEMO your work on 2-14/15.

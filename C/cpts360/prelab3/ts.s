@@ -10,7 +10,7 @@ SAVE:	  pushl %eax
 	  pushl %edi
           pushfl
           movl   running,%ebx   # ebx -> PROC
-          movl   %esp,4(%ebx)   # PORC.save_sp = esp
+          movl   %esp,4(%ebx)   # PROC.save_sp = esp
 FIND:	  call   scheduler
 RESUME:   movl   running,%ebx   # ebx -> PROC
           movl   4(%ebx),%esp   # esp = PROC>saved_sp

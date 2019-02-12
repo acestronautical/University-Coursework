@@ -1,25 +1,10 @@
 /*********** t.c file of A Multitasking System *********/
-#include "string.h"
-#include "type.h"
-#include <stdio.h>
-
-#define MY_NAME "Ace Cassidy" // Name used for body(char *myname)
-PROC proc[NPROC];             // NPROC PROCs
-PROC *freeList;               // freeList of PROCs
-PROC *readyQueue;             // priority queue of READY procs
-PROC *running;                // current running proc pointer
-
-PROC *sleepList; // list of SLEEP procs
-
-#include "queue.c" // include queue.c file
-#include "wait.c"  // include wait.c file
+#include "mtx.h"
 
 /*******************************************************
   kfork() creates a child process; returns child pid.
   When scheduled to run, child PROC resumes to body();
 ********************************************************/
-int body(), tswitch(), do_sleep(), do_wakeup(), do_exit(), do_switch();
-int do_kfork();
 
 // initialize the MT system; create P0 as initial running process
 int init() {
@@ -31,6 +16,8 @@ int init() {
     p->status = FREE;
     p->priority = 0;
     p->next = p + 1;
+    p->child = NULL;
+    p->sibling = NULL;
   }
   proc[NPROC - 1].next = 0;
   freeList = &proc[0]; // all PROCs in freeList
@@ -39,7 +26,7 @@ int init() {
   sleepList = 0; // sleepList = empty
 
   // create P0 as the initial running process
-  p = running = dequeue(&freeList); // use proc[0]
+  p = running = (void *)dequeue(&freeList); // use proc[0]
   p->status = READY;
   p->priority = 0;
   p->ppid = 0; // P0 is its own parent
@@ -50,9 +37,9 @@ int init() {
 }
 
 int menu() {
-  printf("****************************************\n");
-  printf(" ps fork switch exit jesus sleep wakeup \n");
-  printf("****************************************\n");
+  printf("********************************************\n");
+  printf(" ps fork switch exit jesus sleep wakeup wait\n");
+  printf("********************************************\n");
   return 0;
 }
 
@@ -90,19 +77,19 @@ int do_jesus() {
   return 0;
 }
 
+int bodyCall() { return body(MY_NAME); }
 int body(char *myname) // process body function
 {
-
   int c;
   char cmd[64];
-  printf("%s", myname);
-  printf("proc %d starts from body()\n", running->pid);
+  printf("proc %d starts from body():", running->pid);
+  printf("myname = %s\n", myname);
   while (1) {
     printf("***************************************\n");
     printf("proc %d running: parent=%d\n", running->pid, running->ppid);
     printList("readyQueue", readyQueue);
     printSleep("sleepList ", sleepList);
-
+    printTree("procTree", running);
     menu();
     printf("enter a command : ");
     fgets(cmd, 64, stdin);
@@ -110,32 +97,63 @@ int body(char *myname) // process body function
 
     if (strcmp(cmd, "ps") == 0)
       do_ps();
-    if (strcmp(cmd, "fork") == 0)
+    else if (strcmp(cmd, "fork") == 0)
       do_kfork();
-    if (strcmp(cmd, "switch") == 0)
+    else if (strcmp(cmd, "switch") == 0)
       do_switch();
-    if (strcmp(cmd, "exit") == 0)
+    else if (strcmp(cmd, "exit") == 0)
       do_exit();
-    if (strcmp(cmd, "jesus") == 0)
+    else if (strcmp(cmd, "jesus") == 0)
       do_jesus();
-    if (strcmp(cmd, "sleep") == 0)
+    else if (strcmp(cmd, "sleep") == 0)
       do_sleep();
-    if (strcmp(cmd, "wakeup") == 0)
+    else if (strcmp(cmd, "wakeup") == 0)
       do_wakeup();
+    else if (strcmp(cmd, "wait") == 0)
+      do_wait();
+    else
+      break;
   }
+  return do_exit();
 }
 
+// 1). char *myname = "YOUR_NAME";  // your name
+
+//      Rewrite the body() function as
+//              int body(char *myname){ printf("%s", myname);  .....  }
+//      Modify kfork() to do the following:
+
+//         When a new proc starts to execute body(), print the myname string,
+//              which should be YOUR name.
+
+//         When body() ends, e.g. by a null command string, return to do_exit();
+
+//   HINT: AS IF the proc has CALLED body(), passing myname as parameter.
+
+// (2). Modify kfork() to implement process family tree as a binary tree
+//        In the body() function, print the children list of the running proc.
 int kfork() {
   int i;
+  PROC *cur;
   PROC *p = dequeue(&freeList);
   if (!p) {
-    printf("no more proc\n");
+    printf("no more procs available\n");
     return (-1);
   }
   /* initialize the new proc and its stack */
   p->status = READY;
   p->priority = 1; // ALL PROCs priority=1, except P0
   p->ppid = running->pid;
+  p->child = NULL;
+  p->sibling = NULL;
+  if (!running->child)
+    running->child = p;
+  else {
+    cur = running->child;
+    while (cur->sibling)
+      cur = cur->sibling;
+    cur->sibling = p;
+  }
 
   /************ new task initial stack contents ************
    kstack contains: |retPC|eax|ebx|ecx|edx|ebp|esi|edi|eflag|
@@ -143,9 +161,9 @@ int kfork() {
   **********************************************************/
   for (i = 1; i < 10; i++) // zero out kstack cells
     p->kstack[SSIZE - i] = 0;
-  p->kstack[SSIZE - 1] = (int)body; // retPC -> body()
-  p->ksp = &(p->kstack[SSIZE - 9]); // PROC.ksp -> saved eflag
-  enqueue(&readyQueue, p);          // enter p into readyQueue
+  p->kstack[SSIZE - 1] = (int)bodyCall; // retPC -> bodyCall()
+  p->ksp = &(p->kstack[SSIZE - 9]);     // PROC.ksp -> saved eflag
+  enqueue(&readyQueue, p);              // enter p into readyQueue
   return p->pid;
 }
 
@@ -166,7 +184,12 @@ int do_switch() {
 }
 
 int do_exit() {
-  kexit(running->pid); // exit with own PID value
+  printf("P%d in do_exit, enter exit value :", running->pid);
+  int exit;
+  scanf("%d", &exit);
+  getchar();
+  printf("\n");
+  kexit(exit);
   return 0;
 }
 
@@ -188,17 +211,9 @@ int do_wakeup() {
   return 0;
 }
 
-/*************** main() function ***************/
-int main() {
-  printf("Welcome to the MT Multitasking System\n");
-  init();  // initialize system; create and run P0
-  kfork(); // kfork P1 into readyQueue
-  while (1) {
-    printf("P0: switch process\n");
-    while (readyQueue == 0)
-      ;
-    tswitch();
-  }
+int do_wait() {
+  wait(&running->status);
+  return 0;
 }
 
 /*********** scheduler *************/
