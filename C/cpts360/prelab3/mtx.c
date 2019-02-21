@@ -161,9 +161,11 @@ int kfork() {
   **********************************************************/
   for (i = 1; i < 10; i++) // zero out kstack cells
     p->kstack[SSIZE - i] = 0;
-  p->kstack[SSIZE - 1] = (int)bodyCall; // retPC -> bodyCall()
-  p->ksp = &(p->kstack[SSIZE - 9]);     // PROC.ksp -> saved eflag
-  enqueue(&readyQueue, p);              // enter p into readyQueue
+  p->kstack[SSIZE - 1] = (int)&MY_NAME;
+  p->kstack[SSIZE - 2] = (int)exit;
+  p->kstack[SSIZE - 3] = (int)body;
+  p->ksp = &(p->kstack[SSIZE - 11]); // PROC.ksp -> saved eflag
+  enqueue(&readyQueue, p);           // enter p into readyQueue
   return p->pid;
 }
 

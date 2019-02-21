@@ -1,0 +1,15 @@
+LAB3:                                          10 points
+
+(1). ls -l -a  ==> should list CWD in LONG format with all . files 
+                  (Wrong results if their argv[] is NOT passed correctly)
+
+(Choose a text file, e.g. their C program file)
+ 
+(2). cat file  ==> should see the file contents on screen
+
+(3). cat file > out; ls -l   ==> should see out file SAME size as file
+
+(4). cat file | more         ==> Single pipe must be working
+     cat file | grep printf     
+
+(5). cat file | grep printf | more => if CAN handle multiple pipes (+5 points)
