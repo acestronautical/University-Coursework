@@ -11,25 +11,28 @@
 #include <sys/types.h>
 #include <time.h>
 #include <unistd.h>
-#define MAX 256
-// Define variables:
-struct sockaddr_in server_addr, client_addr, name_addr;
-struct hostent *hp;
 
-// BEGIN LS STUFF
-struct stat mystat, *sp;
-char *t1 = "xwrxwrxwr-------";
-char *t2 = "----------------";
-// END LS STUFF
+#define MAX 256
+
+// Define types
 typedef struct cmd {
   char *argv[64];
   int argc;
 } cmd;
-int mysock,
-    client_sock;  // socket descriptors
-int serverPort;   // server port number
-int r, length, n; // help variables
-// Server initialization code:
+
+// Globals
+struct sockaddr_in server_addr, client_addr, name_addr;
+struct hostent *hp;
+int mysock, client_sock; // socket descriptors
+int serverPort;          // server port number
+int r, length, n;        // help variables
+
+// LS Globals
+struct stat mystat, *sp;
+char *t1 = "xwrxwrxwr-------";
+char *t2 = "----------------";
+
+// Server initialization
 int server_init(char *name) {
   printf("==================== server init ======================\n");
   // get DOT name and IP address of this host
@@ -77,109 +80,159 @@ int server_init(char *name) {
   printf("===================== init done =======================\n");
   return 0;
 }
-int _pwd() {
-  char cwd[256] = {0};
-  getcwd(cwd, 256);
-  write(client_sock, cwd, MAX);
-  return 0;
-}
-int ls_file(char *fname) {
+
+// LS
+int ls_file(char *fname, int fd) {
   struct stat fstat, *sp;
   int r, i;
   char ftime[64];
+  char buf[MAX] = {0}, *p_buf = buf;
+  char bufbuf[MAX] = {0};
   sp = &fstat;
-  if ((r = lstat(fname, &fstat)) < 0) {
-    printf("can't stat %s\n", fname);
-    exit(1);
-  }
+  if ((r = lstat(fname, &fstat)) < 0)
+    return write(fd, "can't stat \n", MAX);
   if ((sp->st_mode & 0xF000) == 0x8000) // if (S_ISREG())
-    printf("%c", '-');
+    p_buf = stpcpy(p_buf, "-");
   if ((sp->st_mode & 0xF000) == 0x4000) // if (S_ISDIR())
-    printf("%c", 'd');
+    p_buf = stpcpy(p_buf, "d");
   if ((sp->st_mode & 0xF000) == 0xA000) // if (S_ISLNK())
-    printf("%c", 'l');
+    p_buf = stpcpy(p_buf, "l");
   for (i = 8; i >= 0; i--) {
     if (sp->st_mode & (1 << i)) // print r|w|x
-      printf("%c", t1[i]);
+    {
+      sprintf(bufbuf, "%c", t1[i]);
+      p_buf = stpcpy(p_buf, bufbuf);
+    }
     else
-      printf("%c", t2[i]);
-    // or print -
+    {
+      sprintf(bufbuf, "%c", t2[i]);
+      p_buf = stpcpy(p_buf, bufbuf);
+    }
   }
-  printf("%4d ", (int)sp->st_nlink); // link count
-  printf("%4d ", sp->st_gid);
-  // gid
-  printf("%4d ", sp->st_uid);
-  // uid
-  printf("%8d ", (int)sp->st_size);
-  // file size
-  // print time
-  strcpy(ftime, ctime(&sp->st_ctime)); // print time in calendar form
+  sprintf(bufbuf,"%4d %4d %4d %8d", (int)sp->st_nlink, sp->st_gid,
+                     sp->st_uid, (int)sp->st_size);
+  p_buf = stpcpy(p_buf, bufbuf);
+  strcpy(ftime, ctime(&sp->st_ctime));
   ftime[strlen(ftime) - 1] = 0;
-  // kill \n at end
-  printf("%s ", ftime);
-  // print name
-  printf("%s", basename(fname)); // print file basename
-  // print -> linkname if symbolic file
+  sprintf(bufbuf," %s %s", ftime, basename(fname));
+  p_buf = stpcpy(p_buf, bufbuf); 
   if ((sp->st_mode & 0xF000) == 0xA000) {
     // use readlink() to read linkname
     char linkname[256] = {0};
     readlink(fname, linkname, 256);
-    printf(" -> %s", linkname); // print linked name
+    sprintf(bufbuf, " -> %s", linkname);
+    p_buf = stpcpy(p_buf, bufbuf); // print linked name
   }
-  printf("\n");
+  p_buf = stpcpy(p_buf,"\n");
+  write(fd, buf, MAX);
   return 0;
 }
-int ls_dir(char *dname) {
-  // use opendir(), readdir(); then call ls_file(name)
+
+int ls_dir(char *dirname, int fd) {
+  // hur dir dir dir hur dir
+  DIR *dir = opendir(dirname);
+  struct dirent *dirdir = 0;
+  while (dirdir = readdir(dir)) {
+    ls_file(dirdir->d_name, fd);
+  }
   return 0;
 }
-int ls(int argc, char *argv[]) {
+
+int do_ls(int argc, char *argv[]) {
   struct stat mystat, *sp = &mystat;
   int r;
   char *filename, path[1024], cwd[256];
-  filename = "./";
-  // default to CWD
+  filename = "./"; // default to CWD
   if (argc > 1)
     filename = argv[1]; // if specified a filename
-  if ((r = lstat(filename, sp)) < 0) {
-    printf("no such file %s\n", filename);
-    exit(1);
-  }
+  if ((r = lstat(filename, sp)) < 0)
+    return write(client_sock, "no such file\n", MAX);
   strcpy(path, filename);
-  if (path[0] != '/') { // filename is relative : get CWD path
-    // 8 System Calls for File Operations
+  if (path[0] != '/') { // filename is relative make absolute
     getcwd(cwd, 256);
     strcpy(path, cwd);
     strcat(path, "/");
     strcat(path, filename);
   }
   if (S_ISDIR(sp->st_mode))
-    ls_dir(path);
+    ls_dir(path, client_sock);
   else
-    ls_file(path);
+    ls_file(path, client_sock);
+  return write(client_sock,"***", MAX);
+}
+
+int do_cd(cmd *c) {
+  char buf[MAX] = {0};
+  if (c->argc > 1)
+    chdir(c->argv[1]);
+  else
+    chdir(getenv("HOME"));
+  char cwd[MAX];
+  getcwd(cwd, sizeof(cwd));
+  sprintf(buf,"cd to %s\n OKFINEWHATEVER\n", cwd);
+  write(client_sock, buf, MAX);
   return 0;
 }
+
+int do_pwd(cmd *c) {
+  char cwd[MAX];
+  char buf[MAX]={0};
+  getcwd(cwd, sizeof(cwd));
+  sprintf(buf,"cwd: %s\n ALRIGHTALRIGHTALRIGHT\n", cwd);
+  write(client_sock,buf,MAX);
+  return 0;
+}
+
+//TODO CHECK FOR ARGV1
+int do_mkdir(cmd *c) {
+  char buf[MAX] = {0};
+  int n = 1;
+  if (c->argc > 1)
+    n = mkdir(c->argv[1], 0777);
+  sprintf(buf, "mkdir: %s\n", (!n) ? "success" : "failure");
+  write(client_sock,buf,MAX);
+  return 0;
+}
+
+int do_rmdir(cmd *c) {
+  char buf[MAX] = {0};
+  int n = 1;
+  if (c->argc > 1)
+    n = rmdir(c->argv[1]);
+  sprintf(buf,"rmdir: %s\n", (!n) ? "success" : "failure");
+  write(client_sock,buf,MAX);
+  return 0;
+}
+
+int do_rm(cmd *c) {
+  char buf[MAX] = {0};
+  int n = 1;
+  if (c->argc > 1)
+    n = unlink(c->argv[1]);
+  sprintf(buf, "rmdir: %s\n", (!n) ? "success" : "failure");
+  write(client_sock, buf, MAX);
+  return 0;
+}
+
+// MASTER COMMANDER
 int do_cmd(cmd *c) {
-  char resp[MAX];
+  printf("executing %s with %d args\n", c->argv[0], c->argc - 1 );
   if (!strcmp(c->argv[0], "pwd")) {
-    write(client_sock, "pwd OK", MAX);
+    do_pwd(c);
   } else if (!strcmp(c->argv[0], "ls")) {
-    ls(c->argc, c->argv);
-    write(client_sock, "ls OK", MAX);
+    do_ls(c->argc, c->argv);
   } else if (!strcmp(c->argv[0], "cd")) {
-    write(client_sock, "cd OK", MAX);
+    do_cd(c);
   } else if (!strcmp(c->argv[0], "mkdir")) {
-    write(client_sock, "mkdir OK", MAX);
+    do_mkdir(c);
   } else if (!strcmp(c->argv[0], "rmdir")) {
-    write(client_sock, "rmdir OK", MAX);
+    do_rmdir(c);
   } else if (!strcmp(c->argv[0], "rm")) {
-    write(client_sock, "rm OK", MAX);
+    do_rm(c);
   } else if (!strcmp(c->argv[0], "get")) {
     write(client_sock, "get OK", MAX);
   } else if (!strcmp(c->argv[0], "put")) {
     write(client_sock, "put OK", MAX);
-  } else if (!strcmp(c->argv[0], "quit")) {
-    write(client_sock, "quit OK", MAX);
   } else {
     write(client_sock, "cmd FAIL", MAX);
   }
