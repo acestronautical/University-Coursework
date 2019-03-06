@@ -4,13 +4,14 @@
     "version": "2.0.0",
     "tasks": [
         {
-            "label": "GCC32",
+            "label": "gcc",
             "type": "shell",
             "command": "gcc",
             "args": [
-                "-m32",
                 "-g",
-                "*.c",
+                "server.c",
+                "-o",
+                "server"
             ],
             "group": {
                 "kind": "build",
