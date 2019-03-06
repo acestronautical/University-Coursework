@@ -1,7 +1,7 @@
-// The echo client client.c
 #include <arpa/inet.h>
 #include <dirent.h>
 #include <fcntl.h>
+#include <libgen.h>
 #include <netdb.h>
 #include <netinet/in.h>
 #include <stdio.h>
@@ -9,7 +9,10 @@
 #include <string.h>
 #include <sys/socket.h>
 #include <sys/stat.h>
+#include <sys/types.h>
+#include <time.h>
 #include <unistd.h>
+
 #define MAX 256
 
 // Define types
@@ -169,7 +172,7 @@ int ls_dir(char *dirname, int fd) {
 
 int do_lls(cmd *c) {
   int argc = c->argc;
-  char ** argv = c->argv;
+  char **argv = c->argv;
   struct stat mystat, *sp = &mystat;
   int r;
   char *filename, path[1024], cwd[256];
@@ -277,13 +280,13 @@ int do_put(cmd *c) {
   sprintf(buf, "%s %d", c->argv[1], f_size);
   // print special first line
   write(server_sock, buf, MAX);
-  //open file
+  // open file
   int fd = open(c->argv[1], O_RDONLY);
   // write file contents to server
   do {
     n += read(fd, buf, MAX);
     write(server_sock, buf, MAX);
-  } while (n <= f_size); 
+  } while (n <= f_size);
   puts("file sent");
   return n;
 }

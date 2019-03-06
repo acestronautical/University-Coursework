@@ -103,20 +103,18 @@ int ls_file(char *fname, int fd) {
     {
       sprintf(bufbuf, "%c", t1[i]);
       p_buf = stpcpy(p_buf, bufbuf);
-    }
-    else
-    {
+    } else {
       sprintf(bufbuf, "%c", t2[i]);
       p_buf = stpcpy(p_buf, bufbuf);
     }
   }
-  sprintf(bufbuf,"%4d %4d %4d %8d", (int)sp->st_nlink, sp->st_gid,
-                     sp->st_uid, (int)sp->st_size);
+  sprintf(bufbuf, "%4d %4d %4d %8d", (int)sp->st_nlink, sp->st_gid, sp->st_uid,
+          (int)sp->st_size);
   p_buf = stpcpy(p_buf, bufbuf);
   strcpy(ftime, ctime(&sp->st_ctime));
   ftime[strlen(ftime) - 1] = 0;
-  sprintf(bufbuf," %s %s", ftime, basename(fname));
-  p_buf = stpcpy(p_buf, bufbuf); 
+  sprintf(bufbuf, " %s %s", ftime, basename(fname));
+  p_buf = stpcpy(p_buf, bufbuf);
   if ((sp->st_mode & 0xF000) == 0xA000) {
     // use readlink() to read linkname
     char linkname[256] = {0};
@@ -124,7 +122,7 @@ int ls_file(char *fname, int fd) {
     sprintf(bufbuf, " -> %s", linkname);
     p_buf = stpcpy(p_buf, bufbuf); // print linked name
   }
-  p_buf = stpcpy(p_buf,"\n");
+  p_buf = stpcpy(p_buf, "\n");
   write(fd, buf, MAX);
   return 0;
 }
@@ -141,7 +139,7 @@ int ls_dir(char *dirname, int fd) {
 
 int do_ls(cmd *c) {
   int argc = c->argc;
-  char ** argv = c->argv;
+  char **argv = c->argv;
   struct stat mystat, *sp = &mystat;
   int r;
   char *filename, path[1024], cwd[256];
@@ -161,7 +159,7 @@ int do_ls(cmd *c) {
     ls_dir(path, client_sock);
   else
     ls_file(path, client_sock);
-  return write(client_sock,"***", MAX);
+  return write(client_sock, "***", MAX);
 }
 
 int do_cd(cmd *c) {
@@ -172,28 +170,28 @@ int do_cd(cmd *c) {
     chdir(getenv("HOME"));
   char cwd[MAX];
   getcwd(cwd, sizeof(cwd));
-  sprintf(buf,"cd to %s\n OKFINEWHATEVER\n", cwd);
+  sprintf(buf, "cd to %s\n OKFINEWHATEVER\n", cwd);
   write(client_sock, buf, MAX);
   return 0;
 }
 
 int do_pwd(cmd *c) {
   char cwd[MAX];
-  char buf[MAX]={0};
+  char buf[MAX] = {0};
   getcwd(cwd, sizeof(cwd));
-  sprintf(buf,"cwd: %s\n ALRIGHTALRIGHTALRIGHT\n", cwd);
-  write(client_sock,buf,MAX);
+  sprintf(buf, "cwd: %s\n ALRIGHTALRIGHTALRIGHT\n", cwd);
+  write(client_sock, buf, MAX);
   return 0;
 }
 
-//TODO CHECK FOR ARGV1
+// TODO CHECK FOR ARGV1
 int do_mkdir(cmd *c) {
   char buf[MAX] = {0};
   int n = 1;
   if (c->argc > 1)
     n = mkdir(c->argv[1], 0777);
   sprintf(buf, "mkdir: %s\n", (!n) ? "success" : "failure");
-  write(client_sock,buf,MAX);
+  write(client_sock, buf, MAX);
   return 0;
 }
 
@@ -202,8 +200,8 @@ int do_rmdir(cmd *c) {
   int n = 1;
   if (c->argc > 1)
     n = rmdir(c->argv[1]);
-  sprintf(buf,"rmdir: %s\n", (!n) ? "success" : "failure");
-  write(client_sock,buf,MAX);
+  sprintf(buf, "rmdir: %s\n", (!n) ? "success" : "failure");
+  write(client_sock, buf, MAX);
   return 0;
 }
 
@@ -222,7 +220,7 @@ int do_get(cmd *c) {
   int n = 0, f_size;
   // check if arg and if file exists
   if (c->argc < 2 || access(c->argv[1], F_OK))
-    return write(client_sock,"nofile 0",MAX);
+    return write(client_sock, "nofile 0", MAX);
   // get file size
   struct stat st;
   stat(c->argv[1], &st);
@@ -230,13 +228,13 @@ int do_get(cmd *c) {
   sprintf(buf, "%s %d", c->argv[1], f_size);
   // print special first line
   write(client_sock, buf, MAX);
-  //open file
+  // open file
   int fd = open(c->argv[1], O_RDONLY);
   // write file contents to server
   do {
     n += read(fd, buf, MAX);
     write(client_sock, buf, MAX);
-  } while (n <= f_size); 
+  } while (n <= f_size);
   puts("file sent");
   return n;
 }
@@ -262,7 +260,7 @@ int do_put(cmd *c) {
 
 // MASTER COMMANDER
 int do_cmd(cmd *c) {
-  printf("executing %s with %d args\n", c->argv[0], c->argc - 1 );
+  printf("executing %s with %d args\n", c->argv[0], c->argc - 1);
   if (!strcmp(c->argv[0], "pwd")) {
     do_pwd(c);
   } else if (!strcmp(c->argv[0], "ls")) {
