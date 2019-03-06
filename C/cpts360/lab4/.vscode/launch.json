@@ -8,8 +8,8 @@
             "name": "(gdb) Launch",
             "type": "cppdbg",
             "request": "launch",
-            "program": "${workspaceFolder}/server",
-            "args": [
+            "program": "${workspaceFolder}/client",
+            "args": ["localhost", "44177"
             ],
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}",

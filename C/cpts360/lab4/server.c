@@ -242,18 +242,20 @@ int do_get(cmd *c) {
 int do_put(cmd *c) {
   char line[MAX] = {"\0"};
   int n = 0;
-  int f_size;
-  char *f_name;
+  int f_size = 0;
+  char f_name[MAX];
   read(client_sock, line, MAX);
-  sscanf("%s %d", f_name, f_size);
+  sscanf(line, "%s %d", f_name, &f_size);
   if (!f_size) {
     return printf("File: %s, FAILED", line);
   }
-  int fd = open(f_name, O_WRONLY | O_CREAT);
-  while (n < f_size) {
+  int fd = open(f_name, O_WRONLY | O_CREAT, 0777);
+  while (n < f_size - MAX) {
     n += read(client_sock, line, MAX);
     write(fd, line, MAX);
   }
+  n += read(client_sock, line, MAX);
+  write(fd, line, f_size%MAX);
   puts("file transfer complete");
   return n;
 }
@@ -274,9 +276,9 @@ int do_cmd(cmd *c) {
   } else if (!strcmp(c->argv[0], "rm")) {
     do_rm(c);
   } else if (!strcmp(c->argv[0], "get")) {
-    write(client_sock, "get OK", MAX);
+    do_get(c);
   } else if (!strcmp(c->argv[0], "put")) {
-    write(client_sock, "put OK", MAX);
+    do_put(c);
   } else {
     write(client_sock, "cmd FAIL", MAX);
   }

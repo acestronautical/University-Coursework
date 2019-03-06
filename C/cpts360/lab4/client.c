@@ -247,9 +247,9 @@ int do_get(cmd *c) {
   char line[MAX] = {"\0"};
   int n = 0;
   int f_size;
-  char *f_name;
+  char f_name[MAX];
   read(server_sock, line, MAX);
-  sscanf("%s %d", f_name, f_size);
+  sscanf(line, "%s %d", f_name, &f_size);
   if (!f_size) {
     return printf("File: %s, FAILED", line);
   }
@@ -286,7 +286,7 @@ int do_put(cmd *c) {
   do {
     n += read(fd, buf, MAX);
     write(server_sock, buf, MAX);
-  } while (n <= f_size);
+  } while (n < f_size);
   puts("file sent");
   return n;
 }
