@@ -167,7 +167,9 @@ int ls_dir(char *dirname, int fd) {
   return 0;
 }
 
-int do_lls(int argc, char *argv[]) {
+int do_lls(cmd *c) {
+  int argc = c->argc;
+  char ** argv = c->argv;
   struct stat mystat, *sp = &mystat;
   int r;
   char *filename, path[1024], cwd[256];
@@ -175,7 +177,7 @@ int do_lls(int argc, char *argv[]) {
   if (argc > 1)
     filename = argv[1]; // if specified a filename
   if ((r = lstat(filename, sp)) < 0)
-    return write(stdout, "no such file\n", MAX);
+    return write(STDOUT_FILENO, "no such file\n", MAX);
   strcpy(path, filename);
   if (path[0] != '/') { // filename is relative make absolute
     getcwd(cwd, 256);
@@ -184,10 +186,10 @@ int do_lls(int argc, char *argv[]) {
     strcat(path, filename);
   }
   if (S_ISDIR(sp->st_mode))
-    ls_dir(path, stdout);
+    ls_dir(path, STDOUT_FILENO);
   else
-    ls_file(path, stdout);
-  return write(stdout, "***", MAX);
+    ls_file(path, STDOUT_FILENO);
+  return write(STDOUT_FILENO, "***", MAX);
 }
 
 int do_lcd(cmd *c) {
@@ -256,21 +258,28 @@ int do_get(cmd *c) {
   puts("file transfer complete");
   return n;
 }
+
 int do_put(cmd *c) {
   char buf[MAX] = {"\0"};
   int n = 0, f_size;
+  // check if arg
   if (c->argc < 2)
     return puts("no file specified");
+  // check file exist
   if (access(c->argv[1], F_OK))
     return puts("file not found");
+  // send command to server
   send_cmd(c);
+  // get file size
   struct stat st;
   stat(c->argv[1], &st);
   f_size = st.st_size;
   sprintf(buf, "%s %d", c->argv[1], f_size);
+  // print special first line
   write(server_sock, buf, MAX);
-
-  int fd = open(c->argv[1], O_WRONLY | O_CREAT);
+  //open file
+  int fd = open(c->argv[1], O_RDONLY);
+  // write file contents to server
   do {
     n += read(fd, buf, MAX);
     write(server_sock, buf, MAX);
@@ -278,6 +287,7 @@ int do_put(cmd *c) {
   puts("file sent");
   return n;
 }
+
 int do_ls(cmd *c) {
   send_cmd(c);
   char resp[MAX] = {"\0"};

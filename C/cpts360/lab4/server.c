@@ -1,5 +1,6 @@
 #include <arpa/inet.h>
 #include <dirent.h>
+#include <fcntl.h>
 #include <libgen.h>
 #include <netdb.h>
 #include <netinet/in.h>
@@ -138,7 +139,9 @@ int ls_dir(char *dirname, int fd) {
   return 0;
 }
 
-int do_ls(int argc, char *argv[]) {
+int do_ls(cmd *c) {
+  int argc = c->argc;
+  char ** argv = c->argv;
   struct stat mystat, *sp = &mystat;
   int r;
   char *filename, path[1024], cwd[256];
@@ -214,13 +217,56 @@ int do_rm(cmd *c) {
   return 0;
 }
 
+int do_get(cmd *c) {
+  char buf[MAX] = {"\0"};
+  int n = 0, f_size;
+  // check if arg and if file exists
+  if (c->argc < 2 || access(c->argv[1], F_OK))
+    return write(client_sock,"nofile 0",MAX);
+  // get file size
+  struct stat st;
+  stat(c->argv[1], &st);
+  f_size = st.st_size;
+  sprintf(buf, "%s %d", c->argv[1], f_size);
+  // print special first line
+  write(client_sock, buf, MAX);
+  //open file
+  int fd = open(c->argv[1], O_RDONLY);
+  // write file contents to server
+  do {
+    n += read(fd, buf, MAX);
+    write(client_sock, buf, MAX);
+  } while (n <= f_size); 
+  puts("file sent");
+  return n;
+}
+
+int do_put(cmd *c) {
+  char line[MAX] = {"\0"};
+  int n = 0;
+  int f_size;
+  char *f_name;
+  read(client_sock, line, MAX);
+  sscanf("%s %d", f_name, f_size);
+  if (!f_size) {
+    return printf("File: %s, FAILED", line);
+  }
+  int fd = open(f_name, O_WRONLY | O_CREAT);
+  while (n < f_size) {
+    n += read(client_sock, line, MAX);
+    write(fd, line, MAX);
+  }
+  puts("file transfer complete");
+  return n;
+}
+
 // MASTER COMMANDER
 int do_cmd(cmd *c) {
   printf("executing %s with %d args\n", c->argv[0], c->argc - 1 );
   if (!strcmp(c->argv[0], "pwd")) {
     do_pwd(c);
   } else if (!strcmp(c->argv[0], "ls")) {
-    do_ls(c->argc, c->argv);
+    do_ls(c);
   } else if (!strcmp(c->argv[0], "cd")) {
     do_cd(c);
   } else if (!strcmp(c->argv[0], "mkdir")) {
