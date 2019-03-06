@@ -17,7 +17,7 @@
 
 // Define types
 typedef struct cmd {
-  char *argv[64];
+  char *argv[256];
   int argc;
 } cmd;
 
@@ -103,26 +103,22 @@ int read_resp() {
 
 // LOCALS
 int do_lcat(cmd *c) {
-  int fd, m = 0, n;
+  int fd_out = STDIN_FILENO, fd_in, m = 0, n;
   char buf[MAX];
-  fd = STDIN_FILENO; // default to stdin
   if (c->argc > 1)
-    fd = open(c->argv[1], O_RDONLY);
-  if (fd < 0)
-    exit(1);
-  while ((n = read(fd, buf, MAX)))
-    m += write(STDOUT_FILENO, buf, n);
+    fd_in = open(c->argv[1], O_RDONLY);
+  if (fd_in < 0)
+    return puts("could no open file");
+  while ((n = read(fd_in, buf, MAX)))
+    m += write(fd_out, buf, n);
   return m;
 }
 
 // LS
 int ls_file(char *fname, int fd) {
-  struct stat fstat, *sp;
+  char ftime[MAX], buf[MAX] = {0}, *p_buf = buf, bufbuf[MAX] = {0};
+  struct stat fstat, *sp = &fstat;
   int r, i;
-  char ftime[64];
-  char buf[MAX] = {0}, *p_buf = buf;
-  char bufbuf[MAX] = {0};
-  sp = &fstat;
   if ((r = lstat(fname, &fstat)) < 0)
     return write(fd, "can't stat \n", MAX);
   if ((sp->st_mode & 0xF000) == 0x8000) // if (S_ISREG())
@@ -161,10 +157,9 @@ int ls_file(char *fname, int fd) {
 }
 
 int ls_dir(char *dirname, int fd) {
-  // hur dir dir dir hur dir
   DIR *dir = opendir(dirname);
   struct dirent *dirdir = 0;
-  while (dirdir = readdir(dir)) {
+  while ((dirdir = readdir(dir))) {
     ls_file(dirdir->d_name, fd);
   }
   return 0;
@@ -192,7 +187,7 @@ int do_lls(cmd *c) {
     ls_dir(path, STDOUT_FILENO);
   else
     ls_file(path, STDOUT_FILENO);
-  return write(STDOUT_FILENO, "***", MAX);
+  return write(STDOUT_FILENO, "***", 3);
 }
 
 int do_lcd(cmd *c) {
@@ -202,13 +197,13 @@ int do_lcd(cmd *c) {
     chdir(getenv("HOME"));
   char cwd[MAX];
   getcwd(cwd, sizeof(cwd));
-  printf("cd to %s\n OKFINEWHATEVER\n", cwd);
+  printf("cd to %s\n", cwd);
   return 0;
 }
 int do_lpwd(cmd *c) {
   char cwd[MAX];
   getcwd(cwd, sizeof(cwd));
-  printf("cwd: %s\n ALRIGHTALRIGHTALRIGHT\n", cwd);
+  printf("cwd: %s\n", cwd);
   return 0;
 }
 
@@ -253,7 +248,7 @@ int do_get(cmd *c) {
   if (!f_size) {
     return printf("File: %s, FAILED", line);
   }
-  int fd = open(f_name, O_WRONLY | O_CREAT);
+  int fd = open(f_name, O_WRONLY | O_CREAT, 0777);
   while (n < f_size) {
     n += read(server_sock, line, MAX);
     write(fd, line, MAX);
@@ -373,7 +368,8 @@ int main(int argc, char *argv[]) {
   client_init(argv);
   // sock <---> server
   while (1) {
-    printf("----------------------------------------\n"
+    printf("\n"
+           "----------------------------------------\n"
            "get  put ls  cd   pwd    mkdir  rmdir rm\n"
            "lcat lls lcd lpwd lmkdir lrmdir lrm quit\n"
            "----------------------------------------\n");

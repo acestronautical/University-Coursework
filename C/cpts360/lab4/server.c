@@ -17,7 +17,7 @@
 
 // Define types
 typedef struct cmd {
-  char *argv[64];
+  char *argv[256];
   int argc;
 } cmd;
 
@@ -26,7 +26,6 @@ struct sockaddr_in server_addr, client_addr, name_addr;
 struct hostent *hp;
 int mysock, client_sock; // socket descriptors
 int serverPort;          // server port number
-int r, length, n;        // help variables
 
 // LS Globals
 struct stat mystat, *sp;
@@ -35,6 +34,7 @@ char *t2 = "----------------";
 
 // Server initialization
 int server_init(char *name) {
+  int r, length; // help variables
   printf("==================== server init ======================\n");
   // get DOT name and IP address of this host
   printf("1 : get and show server host info\n");
@@ -84,12 +84,9 @@ int server_init(char *name) {
 
 // LS
 int ls_file(char *fname, int fd) {
-  struct stat fstat, *sp;
+  char ftime[MAX], buf[MAX] = {0}, *p_buf = buf, bufbuf[MAX] = {0};
+  struct stat fstat, *sp = &fstat;
   int r, i;
-  char ftime[64];
-  char buf[MAX] = {0}, *p_buf = buf;
-  char bufbuf[MAX] = {0};
-  sp = &fstat;
   if ((r = lstat(fname, &fstat)) < 0)
     return write(fd, "can't stat \n", MAX);
   if ((sp->st_mode & 0xF000) == 0x8000) // if (S_ISREG())
@@ -128,10 +125,9 @@ int ls_file(char *fname, int fd) {
 }
 
 int ls_dir(char *dirname, int fd) {
-  // hur dir dir dir hur dir
   DIR *dir = opendir(dirname);
   struct dirent *dirdir = 0;
-  while (dirdir = readdir(dir)) {
+  while ((dirdir = readdir(dir))) {
     ls_file(dirdir->d_name, fd);
   }
   return 0;
@@ -159,7 +155,7 @@ int do_ls(cmd *c) {
     ls_dir(path, client_sock);
   else
     ls_file(path, client_sock);
-  return write(client_sock, "***", MAX);
+  return write(client_sock, "***", 3);
 }
 
 int do_cd(cmd *c) {
@@ -170,7 +166,7 @@ int do_cd(cmd *c) {
     chdir(getenv("HOME"));
   char cwd[MAX];
   getcwd(cwd, sizeof(cwd));
-  sprintf(buf, "cd to %s\n OKFINEWHATEVER\n", cwd);
+  sprintf(buf, "cd to %s\n", cwd);
   write(client_sock, buf, MAX);
   return 0;
 }
@@ -179,7 +175,7 @@ int do_pwd(cmd *c) {
   char cwd[MAX];
   char buf[MAX] = {0};
   getcwd(cwd, sizeof(cwd));
-  sprintf(buf, "cwd: %s\n ALRIGHTALRIGHTALRIGHT\n", cwd);
+  sprintf(buf, "cwd: %s\n", cwd);
   write(client_sock, buf, MAX);
   return 0;
 }
@@ -255,14 +251,14 @@ int do_put(cmd *c) {
     write(fd, line, MAX);
   }
   n += read(client_sock, line, MAX);
-  write(fd, line, f_size%MAX);
+  write(fd, line, f_size % MAX);
   puts("file transfer complete");
   return n;
 }
 
 // MASTER COMMANDER
 int do_cmd(cmd *c) {
-  printf("executing %s with %d args\n", c->argv[0], c->argc - 1);
+  printf("do %s with %d args\n", c->argv[0], c->argc - 1);
   if (!strcmp(c->argv[0], "pwd")) {
     do_pwd(c);
   } else if (!strcmp(c->argv[0], "ls")) {
@@ -297,6 +293,8 @@ int parse_input(char *line, cmd *c) {
   return i;
 }
 int main(int argc, char *argv[]) {
+  int length, n; // help variables
+
   char *hostname;
   char line[MAX];
   if (argc < 2)
