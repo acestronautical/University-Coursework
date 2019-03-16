@@ -5,6 +5,9 @@
 
                  Date Assigned: 3-7-2019
 
+
+  0. DEPENDENCIES: sudo apt install libext2fs-dev
+
   1. DUE and DEMO: Level-1  : 4-05-2019;  QUIZ: 4-9-2019
                    Level-2-3: 4-25-2019;  DEMO & Interview with KCW 
                               
