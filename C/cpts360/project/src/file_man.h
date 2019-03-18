@@ -1,3 +1,4 @@
+#pragma once
 #include <ext2fs/ext2_fs.h>
 #include <fcntl.h>
 #include <libgen.h>
@@ -6,25 +7,29 @@
 #include <string.h>
 #include <sys/stat.h>
 
+//// TYPEDEF ////
+
 // define shorter TYPES for convenience
-typedef struct ext2_group_desc GD;
-typedef struct ext2_super_block SUPER;
-typedef struct ext2_inode INODE;
-typedef struct ext2_dir_entry_2 DIR;
+typedef struct ext2_group_desc group_desc;
+typedef struct ext2_super_block super_block;
+typedef struct ext2_inode inode;
+typedef struct ext2_dir_entry_2 dir_entry;
+
+//// CONST ////
 
 // Block size
 #define BLKSIZE 1024
 
 // Block number of EXT2 FS on FD
-#define SUPERBLOCK 1
-#define GDBLOCK 2
+#define SUPER_BLOCK 1
+#define GROUP_DESC_BLOCK 2
 #define ROOT_INODE 2
 
 // Default dir and regular file modes
-#define DIR_MOD 0x41ED
+#define DIR_ENTRY_MOD 0x41ED
 #define FILE_MODE 0x81AE
-#define SUPER_MAGIC 0xEF53
-#define SUPER_USER 0
+#define SUPER_BLOCK_MAGIC 0xEF53
+#define SUPER_BLOCK_USER 0
 
 // Proc status
 #define FREE 0
@@ -37,11 +42,17 @@ typedef struct ext2_dir_entry_2 DIR;
 #define NFD 10
 #define NOFT 40
 
-// Open File Table
+//// STRUCT ////
+
+// Open file Table AKA opened file instance
 typedef struct oft {
+  // file mode
   int mode;
+  // number of PROCs sharing this instance
   int refCount;
+  // pointer to minode of file
   struct minode *minodePtr;
+  // byte offset for R|W
   int offset;
 } OFT;
 
@@ -59,7 +70,7 @@ typedef struct proc {
 
 // In-memory inodes structure
 typedef struct minode {
-  INODE INODE;
+  inode inode;
   // disk inode
   int dev, ino;
   // use count
@@ -74,17 +85,6 @@ typedef struct minode {
   // int lock;
 } MINODE;
 
-// Open file Table AKA opened file instance
-typedef struct oft {
-  int mode;
-  // number of PROCs sharing this instance
-  int refCount;
-  // pointer to minode of file
-  MINODE *minodePtr;
-  // byte offset for R|W
-  int offset;
-} OFT;
-
 // Mount Table structure
 typedef struct mtable {
   // device number; 0 for FREE
@@ -92,7 +92,7 @@ typedef struct mtable {
   // from superblock
   int ninodes;
   int nblocks;
-  // from superblock and GD
+  // from superblock and group_desc
   int free_blocks;
   int free_inodes;
   // from group descriptor
@@ -100,10 +100,48 @@ typedef struct mtable {
   int imap;
   // inodes start block
   int iblock;
-  // mount point DIR pointer
+  // mount point dir_entry pointer
   MINODE *mntDirPtr;
   // device name
   char devName[64];
-  // mount point DIR name
+  // mount point dir_entry name
   char mntName[64];
 } MTABLE;
+
+//// VAR ////
+
+// in memory  inodes
+MINODE minode[NMINODE];
+
+// root mounted inode
+MINODE *root;
+
+// mount tables
+MTABLE mtable[NMTABLE];
+
+// Opened file instance
+OFT oft[NOFT];
+
+// PROC structures
+PROC proc[NPROC];
+
+// current executing PROC
+PROC *running;
+
+// number of inode and blocks
+int ninode, nblocks;
+
+// not sure
+int bmap, imap, iblock;
+
+// device
+int dev;
+
+// tokenized component string strings
+char gline[25], *name[16];
+
+// number of component strings
+int nname;
+
+// default root_device
+char *rootdev = "mydisk";

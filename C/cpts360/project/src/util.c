@@ -1,30 +1,27 @@
-#include "global.h"
-#include "type.h"
+#include "file_man.h"
 
 int fs_init() {
   int i, j;
+  // initialize all minodes as FREE
   for (i = 0; i < NMINODE; i++)
-    //
     minode[i].refCount = 0;
+  // initialize mtable entries as FREE
   for (i = 0; i < NMTABLE; i++)
-    //
     mtable[i].dev = 0;
-  for (i = 0; i < NOFT; i++)
-    //
-    oft[i].refCount = 0;
+  // initialize PROCs
   for (i = 0; i < NPROC; i++) {
-    //
-    proc[i].status = FREE; //
+    proc[i].status = FREE;
     proc[i].pid = i;
-    //
+    // P0 is a superuser process
     proc[i].uid = i;
-    //
+    // initialize PROC file descriptors to NULL
     for (j = 0; j < NFD; j++)
       proc[i].fd[j] = 0;
-    //
     proc[i].next = &proc[i + 1];
   }
+  // circular list
   proc[NPROC - 1].next = &proc[0];
+  // P0 runs first
   running = &proc[0];
 }
 
@@ -81,7 +78,7 @@ int put_block(int dev, int blk, char *buf) {
 MINODE *iget(int dev, int ino) {
   MINODE *mip;
   MTABLE *mp;
-  INODE *ip;
+  inode *ip;
   int i, block, offset;
   char buf[BLKSIZE];
   // serach in-memory minodes first
@@ -98,8 +95,8 @@ MINODE *iget(int dev, int ino) {
   block = (ino - 1) / 8 + iblock;
   offset = (ino - 1) % 8;
   get_block(dev, block, buf);
-  ip = (INODE *)buf + offset;
-  mip->INODE = *ip;
+  ip = (inode *)buf + offset;
+  mip->inode = *ip;
   // initialize minode
   mip->refCount = 1;
   mip->mounted = 0;
@@ -117,7 +114,7 @@ MINODE *iget(int dev, int ino) {
 // written back to disk if it is modified (dirty).
 
 int iput(MINODE *mip) {
-  INODE *ip;
+  inode *ip;
   int i, block, offset;
   char buf[BLKSIZE];
   if (mip == 0)
@@ -131,8 +128,8 @@ int iput(MINODE *mip) {
   offset = (mip->ino - 1) % 8;
   // get block containing this inode
   get_block(mip->dev, block, buf);
-  ip = (INODE *)buf + offset;
-  *ip = mip->INODE;
+  ip = (inode *)buf + offset;
+  *ip = mip->inode;
   put_block(mip->dev, block, buf);
   midalloc(mip);
 }
@@ -152,10 +149,6 @@ int iput(MINODE *mip) {
 // successive directories. The following shows the tokenize() and search()
 // functions.
 
-char *name[64];  // token string pointers
-char gline[256]; // holds token strings, each pointed by a name[i]
-int nname;       // number of token strings
-
 int tokenize(char *pathname) {
   char *s;
   strcpy(gline, pathname);
@@ -170,12 +163,12 @@ int tokenize(char *pathname) {
 int search(MINODE *mip, char *name) {
   int i;
   char *cp, temp[256], sbuf[BLKSIZE];
-  DIR *dp;
-  for (i = 0; i < 12; i++) { // search DIR direct blocks only
-    if (mip->INODE.i_block[i] == 0)
+  dir_entry *dp;
+  for (i = 0; i < 12; i++) { // search dir_entry direct blocks only
+    if (mip->inode.i_block[i] == 0)
       return 0;
-    get_block(mip->dev, mip->INODE.i_block[i], sbuf);
-    dp = (DIR *)sbuf;
+    get_block(mip->dev, mip->inode.i_block[i], sbuf);
+    dp = (dir_entry *)sbuf;
     cp = sbuf;
     while (cp < sbuf + BLKSIZE) {
       strncpy(temp, dp->name, dp->name_len);
@@ -186,7 +179,7 @@ int search(MINODE *mip, char *name) {
         return dp->inode;
       }
       cp += dp->rec_len;
-      dp = (DIR *)cp;
+      dp = (dir_entry *)cp;
     }
   }
   return 0;
@@ -208,7 +201,7 @@ int getino(char *pathname) {
 
   for (i = 0; i < nname; i++) {
     // search for each component string
-    if (!S_ISDIR(mip->INODE.i_mode)) { // check DIR type
+    if (!S_ISDIR(mip->inode.i_mode)) { // check DIR type
       printf("%s is not a directory\n", name[i]);
       iput(mip);
       return 0;
@@ -235,5 +228,5 @@ int getino(char *pathname) {
 // inode
 //. ino = getino(pathname);
 //. mip = iget(dev, ino);
-// . use mip->INODE, which may modify the INODE;
+// . use mip->inode, which may modify the inode;
 // . iput(mip);

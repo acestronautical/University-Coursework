@@ -31,10 +31,10 @@
    Files are exactly the same as they are in the Linux file system, i.e.
    we shall use the same EXT2 file system data structures for
 
-      SuperBlock, GroupDescriptor, Bitmaps, Inode, Directory
+      ext2_super_blockBlock, GroupDescriptor, Bitmaps, Inode, Directory
 
    EXCEPTIONS:
-      Only DIR and REG file types; no SPECIAL files.
+      Only ext2_dir_entry_2 and REG file types; no SPECIAL files.
       File size : No triple-indirect blocks.
    
 2. Disks:
@@ -52,7 +52,7 @@
 4. Processes:
    Every file operation is performed by a process.
    The simulator starts with TWO processes:
-       A process P1 with uid=0 (for SUPERUSER), and
+       A process P1 with uid=0 (for ext2_super_blockUSER), and
        A process P2 with uid=1 (for ordinary user).
    The CWD of both processes are initially at the root directory /
   
@@ -94,7 +94,7 @@
                        SAMPLE PROGRAMS:
 1. OVERALL: ~cs360/samples/PROJECT
             simulator.bin: The File System Simulator for EXT2 FS. 
-            diskimage    : a virtual FD disk containing DIRs and FILEs
+            diskimage    : a virtual FD disk containing ext2_dir_entry_2s and FILEs
   Download and run the simulator on diskimage to see what I expect of YOUR work.
 
 ============================================================================

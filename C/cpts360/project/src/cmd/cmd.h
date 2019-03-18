@@ -3,6 +3,7 @@ typedef struct cmd {
   char argv[64];
 } cmd;
 
+// specific commands
 int do_cd(cmd);
 int do_chmod(cmd);
 int do_creat(cmd);
@@ -15,3 +16,6 @@ int do_stat(cmd);
 int do_symlink(cmd);
 int do_touch(cmd);
 int do_unlink(cmd);
+
+// utility
+int spawn_proc(int, int, cmd *);

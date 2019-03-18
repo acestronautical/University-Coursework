@@ -1,0 +1,21 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "gcc 32bit",
+            "type": "shell",
+            "command": "gcc",
+            "args": [
+                "main.c",
+                "./src/*.c",
+                "-g",
+                "-o",
+                "file_man.bin"
+            ],
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            }
+        }
+    ]
+}
