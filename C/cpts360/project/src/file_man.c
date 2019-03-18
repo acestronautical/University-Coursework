@@ -3,7 +3,8 @@
 #include <unistd.h>
 
 int run_file_manager(int argc, char const *argv[]) {
-  char line[128], cmd[16], pathname[64], *rootdev;
+  char line[128], cmd[16], pathname[64];
+  char *rootdev;
   if (argc > 1)
     rootdev = (char *)argv[1];
   fs_init();
@@ -26,8 +27,8 @@ int fs_init() {
   for (i = 0; i < NUM_MINODES; i++)
     minode_arr[i].refCount = 0;
   // initialize mtable entries as PROC_FREE
-  for (i = 0; i < NUM_MTABLES; i++)
-    mtable_arr[i].dev = 0;
+  for (i = 0; i < NUM_MENTRIES; i++)
+    mentry_arr[i].dev = 0;
   // initialize PROCs
   for (i = 0; i < NUM_PROCS; i++) {
     proc_arr[i].status = PROC_FREE;
@@ -103,7 +104,7 @@ int put_block(int dev, int blk, char *buf) {
 
 minode *iget(int dev, int ino) {
   minode *mip;
-  mount_table *mp;
+  mount_entry *mp;
   inode *ip;
   int i, block, offset;
   char buf[BLKSIZE];

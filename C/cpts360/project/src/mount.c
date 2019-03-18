@@ -2,7 +2,7 @@
 
 int mount_root(char *dev_path) {
   int i;
-  mount_table *mp;
+  mount_entry *mp;
   super_block *sp;
   group_desc *gp;
   char buf[BLKSIZE];
@@ -21,7 +21,7 @@ int mount_root(char *dev_path) {
     exit(0);
   }
   // fill mount table mtable_arr[0] with device information
-  mp = &mtable_arr[0];
+  mp = &mentry_arr[0];
   // use mtable[0]
   mp->dev = dev;
   // copy super block info into mtable_arr[0]

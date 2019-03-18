@@ -1,11 +1,12 @@
 #pragma once
 #include <ext2fs/ext2_fs.h>
 #include <fcntl.h>
-#include <libgen.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <sys/stat.h>
+#include <sys/types.h>
+#include <unistd.h>
 
 //// TYPEDEF ////
 
@@ -20,10 +21,24 @@ typedef struct ext2_dir_entry_2 dir_entry;
 // Block size
 #define BLKSIZE 1024
 
-// Block number of EXT2 FS on FD
+// Block numbers of EXT2
 #define SUPER_BLOCK 1
 #define GROUP_DESC_BLOCK 2
-#define ROOT_INODE 2
+
+// Inode numbers of EXT2
+#define ROOT_INODE EXT2_ROOT_INO
+
+// Inode numbers of EXT2 as defined in ext2fs.h
+// EXT2_BAD_INO 1         Bad blocks inode
+// EXT2_ROOT_INO 2        Root inode
+// EXT4_USR_QUOTA_INO 3   User quota inode
+// EXT4_GRP_QUOTA_INO 4   Group quota inode
+// EXT2_BOOT_LOADER_INO 5 Boot loader inode
+// EXT2_UNDEL_DIR_INO 6   Undelete directory inode
+// EXT2_RESIZE_INO 7      Reserved group descriptors inode
+// EXT2_JOURNAL_INO 8     Journal inode
+// EXT2_EXCLUDE_INO 9     The "exclude" inode, for snapshots
+// EXT4_REPLICA_INO 10    Used by non-upstream feature
 
 // Default dir and regular file modes
 #define DIR_ENTRY_MOD 0x41ED
@@ -36,7 +51,7 @@ typedef struct ext2_dir_entry_2 dir_entry;
 
 // file system table sizes
 #define NUM_MINODES 100
-#define NUM_MTABLES 10
+#define NUM_MENTRIES 10
 #define NUM_PROCS 2
 #define NUM_FD 10
 #define NUM_OFT 40
@@ -78,14 +93,14 @@ typedef struct minode {
   int dirty;
   // mounted flag
   int mounted;
-  // mount table pointer
-  struct mount_table *mntPtr;
+  // mount entry pointer
+  struct mount_entry *mntPtr;
   // ignored for simple FS
   // int lock;
 } minode;
 
-// Mount Table structure
-typedef struct mount_table {
+// Mount Entry structure
+typedef struct mount_entry {
   // device number; 0 for PROC_FREE
   int dev;
   // from superblock
@@ -105,7 +120,7 @@ typedef struct mount_table {
   char devName[64];
   // mount point dir_entry name
   char mntName[64];
-} mount_table;
+} mount_entry;
 
 //// VAR ////
 
@@ -116,7 +131,7 @@ minode minode_arr[NUM_MINODES];
 minode *root;
 
 // mount tables
-mount_table mtable_arr[NUM_MTABLES];
+mount_entry mentry_arr[NUM_MENTRIES];
 
 // Opened file instance
 oft oft_arr[NUM_OFT];
@@ -139,7 +154,6 @@ int dev;
 // tokenized component string strings
 char gline[25], *name[16];
 
-// number of component strings
 int nname;
 
 //// FUNC ////

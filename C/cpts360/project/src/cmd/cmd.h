@@ -1,7 +1,7 @@
 #pragma once
 typedef struct cmd {
-  int argc;
-  char argv[64];
+  int argc;       // count of strings
+  char *argv[64]; // array of strings
 } cmd;
 
 // specific commands
@@ -19,4 +19,5 @@ int do_touch(cmd);
 int do_unlink(cmd);
 
 // utility
+int make_cmd(char *, cmd *);
 int spawn_proc(int, int, cmd *);
