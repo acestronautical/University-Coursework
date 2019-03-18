@@ -1,3 +1,4 @@
+#pragma once
 typedef struct cmd {
   int argc;
   char argv[64];

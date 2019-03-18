@@ -21,7 +21,7 @@ int spawn_proc(int in_fd, int out_fd, cmd *c) {
       dup2(out_fd, 1);
       close(out_fd);
     }
-    execvp(c->argv[0], (char *const *)c->argv);
+    execvp(c->argv, (char *const *)c->argv);
   }
   return pid; // parent
 }

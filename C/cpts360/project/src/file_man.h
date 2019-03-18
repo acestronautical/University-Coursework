@@ -32,8 +32,8 @@ typedef struct ext2_dir_entry_2 dir_entry;
 #define SUPER_BLOCK_USER 0
 
 // Proc status
-#define FREE 0
-#define BUSY 1
+#define PROC_FREE 0
+#define PROC_BUSY 1
 
 // file system table sizes
 #define NMINODE 100
@@ -58,7 +58,7 @@ typedef struct oft {
 
 // PROC structure
 typedef struct proc {
-  struct Proc *next;
+  struct proc *next;
   int pid;
   int uid;
   int gid;
@@ -80,14 +80,14 @@ typedef struct minode {
   // mounted flag
   int mounted;
   // mount table pointer
-  struct mount *mntPtr;
+  struct mtable *mntPtr;
   // ignored for simple FS
   // int lock;
 } MINODE;
 
 // Mount Table structure
 typedef struct mtable {
-  // device number; 0 for FREE
+  // device number; 0 for PROC_FREE
   int dev;
   // from superblock
   int ninodes;
@@ -143,5 +143,18 @@ char gline[25], *name[16];
 // number of component strings
 int nname;
 
-// default root_device
-char *rootdev = "mydisk";
+//// FUNC ////
+
+int run_file_manager(int argc, char const *argv[]);
+int fs_init();
+MINODE *mialloc();
+int midalloc(MINODE *);
+int get_block(int, int, char *);
+int put_block(int, int, char *);
+MINODE *iget(int, int);
+int iput(MINODE *);
+int tokenize(char *);
+int search(MINODE *, char *);
+int getino(char *);
+
+int mount_root(char *);

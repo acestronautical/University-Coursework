@@ -7,10 +7,11 @@
             "command": "gcc",
             "args": [
                 "main.c",
-                "./src/*.c",
+                "src/file_man.c",
+                "src/mount.c",
                 "-g",
                 "-o",
-                "file_man.bin"
+                "file_man.out"
             ],
             "group": {
                 "kind": "build",
