@@ -24,34 +24,34 @@ int fs_init() {
   int i, j;
   // initialize all minodes as PROC_FREE
   for (i = 0; i < NMINODE; i++)
-    minode[i].refCount = 0;
+    minode_arr[i].refCount = 0;
   // initialize mtable entries as PROC_FREE
   for (i = 0; i < NMTABLE; i++)
-    mtable[i].dev = 0;
+    mtable_arr[i].dev = 0;
   // initialize PROCs
   for (i = 0; i < NPROC; i++) {
-    proc[i].status = PROC_FREE;
-    proc[i].pid = i;
+    proc_arr[i].status = PROC_FREE;
+    proc_arr[i].pid = i;
     // P0 is a superuser process
-    proc[i].uid = i;
+    proc_arr[i].uid = i;
     // initialize PROC file descriptors to NULL
     for (j = 0; j < NFD; j++)
-      proc[i].fd[j] = 0;
-    proc[i].next = &proc[i + 1];
+      proc_arr[i].fd[j] = 0;
+    proc_arr[i].next = &proc_arr[i + 1];
   }
   // circular list
-  proc[NPROC - 1].next = &proc[0];
+  proc_arr[NPROC - 1].next = &proc_arr[0];
   // P0 runs first
-  running = &proc[0];
+  running = &proc_arr[0];
   return 0;
 }
 
-MINODE *mialloc()
+minode *mialloc()
 // allocate a PROC_FREE minode for use
 {
   int i;
   for (i = 0; i < NMINODE; i++) {
-    MINODE *mp = &minode[i];
+    minode *mp = &minode_arr[i];
     if (mp->refCount == 0) {
       mp->refCount = 1;
       return mp;
@@ -60,7 +60,7 @@ MINODE *mialloc()
   printf("FS panic : out of minodes\n");
   return 0;
 }
-int midalloc(MINODE *mip) // release a used minode
+int midalloc(minode *mip) // release a used minode
 {
   mip->refCount = 0;
   return 0;
@@ -101,15 +101,15 @@ int put_block(int dev, int blk, char *buf) {
 // shall assume that minode locking is unnecessary, which will
 // be explained later.
 
-MINODE *iget(int dev, int ino) {
-  MINODE *mip;
-  MTABLE *mp;
+minode *iget(int dev, int ino) {
+  minode *mip;
+  mtable *mp;
   inode *ip;
   int i, block, offset;
   char buf[BLKSIZE];
   // serach in-memory minodes first
   for (i = 0; i < NMINODE; i++) {
-    MINODE *mip = &minode[i];
+    minode *mip = &minode_arr[i];
     if (mip->refCount && (mip->dev == dev) && (mip->ino == ino)) {
       mip->refCount++;
       return mip;
@@ -138,7 +138,7 @@ MINODE *iget(int dev, int ino) {
 // zero, meaning that the minode still has other users, the caller simply
 // returns. If the caller is the last user of the minode (refCount 1⁄4 0), the
 // INODE is written back to disk if it is modified (dirty).
-int iput(MINODE *mip) {
+int iput(minode *mip) {
   inode *ip;
   int i, block, offset;
   char buf[BLKSIZE];
@@ -190,7 +190,7 @@ int tokenize(char *pathname) {
   return 0;
 }
 
-int search(MINODE *mip, char *name) {
+int search(minode *mip, char *name) {
   int i;
   char *cp, temp[256], sbuf[BLKSIZE];
   dir_entry *dp;
@@ -216,7 +216,7 @@ int search(MINODE *mip, char *name) {
 }
 
 int getino(char *pathname) {
-  MINODE *mip;
+  minode *mip;
   int i, ino;
   if (strcmp(pathname, "/") == 0) {
     return 2; // return root ino = 2

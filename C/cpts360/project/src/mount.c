@@ -1,12 +1,12 @@
 #include "file_man.h"
 
-int mount_root(char *device) {
+int mount_root(char *dev_path) {
   int i;
-  MTABLE *mp;
+  mount_table *mp;
   super_block *sp;
   group_desc *gp;
   char buf[BLKSIZE];
-  dev = open(device, O_RDWR);
+  dev = open(dev_path, O_RDWR);
   if (dev < 0) {
     printf("panic : can’t open root device\n");
     exit(1);
@@ -15,18 +15,19 @@ int mount_root(char *device) {
   get_block(dev, 1, buf);
   sp = (super_block *)buf;
   /* check magic number */
-  if (sp->s_magic != SUPER_BLOCK_MAGIC) {
-    printf("super magic=%x : %s is not an EXT2 filesys\n", sp->s_magic, device);
+  if (sp->s_magic != EXT2_SUPER_MAGIC) {
+    printf("super magic=%x : %s is not an EXT2 filesys\n", sp->s_magic,
+           dev_path);
     exit(0);
   }
-  // fill mount table mtable[0] with device information
-  mp = &mtable[0];
+  // fill mount table mtable_arr[0] with device information
+  mp = &mtable_arr[0];
   // use mtable[0]
   mp->dev = dev;
-  // copy super block info into mtable[0]
+  // copy super block info into mtable_arr[0]
   ninode = mp->ninodes = sp->s_inodes_count;
   nblocks = mp->nblocks = sp->s_blocks_count;
-  strcpy(mp->devName, device);
+  strcpy(mp->devName, dev_path);
   strcpy(mp->mntName, "/");
   get_block(dev, 2, buf);
   gp = (group_desc *)buf;
@@ -41,9 +42,9 @@ int mount_root(char *device) {
   // double link
   root->mntPtr = mp;
   // set proc CWDs
-  for (i = 0; i < NPROC; i++)
+  for (i = 0; i < NUM_PROCS; i++)
     // set proc’s CWD
-    proc[i].cwd = iget(dev, 2); // each inc refCount by 1
-  printf("mount : %s mounted on / \n", device);
+    proc_arr[i].cwd = iget(dev, 2); // each inc refCount by 1
+  printf("mount : %s mounted on / \n", dev_path);
   return 0;
 }

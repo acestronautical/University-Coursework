@@ -9,7 +9,9 @@
             "type": "cppdbg",
             "request": "launch",
             "program": "${workspaceFolder}/file_man.out",
-            "args": [],
+            "args": [
+                "resource/exampledisk"
+            ],
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}",
             "environment": [],

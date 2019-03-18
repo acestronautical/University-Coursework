@@ -28,7 +28,6 @@ typedef struct ext2_dir_entry_2 dir_entry;
 // Default dir and regular file modes
 #define DIR_ENTRY_MOD 0x41ED
 #define FILE_MODE 0x81AE
-#define SUPER_BLOCK_MAGIC 0xEF53
 #define SUPER_BLOCK_USER 0
 
 // Proc status
@@ -36,11 +35,11 @@ typedef struct ext2_dir_entry_2 dir_entry;
 #define PROC_BUSY 1
 
 // file system table sizes
-#define NMINODE 100
-#define NMTABLE 10
-#define NPROC 2
-#define NFD 10
-#define NOFT 40
+#define NUM_MINODES 100
+#define NUM_MTABLES 10
+#define NUM_PROCS 2
+#define NUM_FD 10
+#define NUM_OFT 40
 
 //// STRUCT ////
 
@@ -54,7 +53,7 @@ typedef struct oft {
   struct minode *minodePtr;
   // byte offset for R|W
   int offset;
-} OFT;
+} oft;
 
 // PROC structure
 typedef struct proc {
@@ -65,8 +64,8 @@ typedef struct proc {
   int ppid;
   int status;
   struct minode *cwd;
-  OFT *fd[NFD];
-} PROC;
+  oft *fd[NUM_FD];
+} proc;
 
 // In-memory inodes structure
 typedef struct minode {
@@ -80,13 +79,13 @@ typedef struct minode {
   // mounted flag
   int mounted;
   // mount table pointer
-  struct mtable *mntPtr;
+  struct mount_table *mntPtr;
   // ignored for simple FS
   // int lock;
-} MINODE;
+} minode;
 
 // Mount Table structure
-typedef struct mtable {
+typedef struct mount_table {
   // device number; 0 for PROC_FREE
   int dev;
   // from superblock
@@ -101,32 +100,32 @@ typedef struct mtable {
   // inodes start block
   int iblock;
   // mount point dir_entry pointer
-  MINODE *mntDirPtr;
+  minode *mntDirPtr;
   // device name
   char devName[64];
   // mount point dir_entry name
   char mntName[64];
-} MTABLE;
+} mount_table;
 
 //// VAR ////
 
 // in memory  inodes
-MINODE minode[NMINODE];
+minode minode_arr[NUM_MINODES];
 
 // root mounted inode
-MINODE *root;
+minode *root;
 
 // mount tables
-MTABLE mtable[NMTABLE];
+mount_table mtable_arr[NUM_MTABLES];
 
 // Opened file instance
-OFT oft[NOFT];
+oft oft_arr[NUM_OFT];
 
 // PROC structures
-PROC proc[NPROC];
+proc proc_arr[NUM_PROCS];
 
 // current executing PROC
-PROC *running;
+proc *running;
 
 // number of inode and blocks
 int ninode, nblocks;
@@ -147,14 +146,13 @@ int nname;
 
 int run_file_manager(int argc, char const *argv[]);
 int fs_init();
-MINODE *mialloc();
-int midalloc(MINODE *);
+minode *mialloc();
+int midalloc(minode *);
 int get_block(int, int, char *);
 int put_block(int, int, char *);
-MINODE *iget(int, int);
-int iput(MINODE *);
+minode *iget(int, int);
+int iput(minode *);
 int tokenize(char *);
-int search(MINODE *, char *);
+int search(minode *, char *);
 int getino(char *);
-
 int mount_root(char *);
