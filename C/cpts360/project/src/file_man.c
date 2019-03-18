@@ -23,24 +23,24 @@ int run_file_manager(int argc, char const *argv[]) {
 int fs_init() {
   int i, j;
   // initialize all minodes as PROC_FREE
-  for (i = 0; i < NMINODE; i++)
+  for (i = 0; i < NUM_MINODES; i++)
     minode_arr[i].refCount = 0;
   // initialize mtable entries as PROC_FREE
-  for (i = 0; i < NMTABLE; i++)
+  for (i = 0; i < NUM_MTABLES; i++)
     mtable_arr[i].dev = 0;
   // initialize PROCs
-  for (i = 0; i < NPROC; i++) {
+  for (i = 0; i < NUM_PROCS; i++) {
     proc_arr[i].status = PROC_FREE;
     proc_arr[i].pid = i;
     // P0 is a superuser process
     proc_arr[i].uid = i;
     // initialize PROC file descriptors to NULL
-    for (j = 0; j < NFD; j++)
+    for (j = 0; j < NUM_FD; j++)
       proc_arr[i].fd[j] = 0;
     proc_arr[i].next = &proc_arr[i + 1];
   }
   // circular list
-  proc_arr[NPROC - 1].next = &proc_arr[0];
+  proc_arr[NUM_PROCS - 1].next = &proc_arr[0];
   // P0 runs first
   running = &proc_arr[0];
   return 0;
@@ -50,7 +50,7 @@ minode *mialloc()
 // allocate a PROC_FREE minode for use
 {
   int i;
-  for (i = 0; i < NMINODE; i++) {
+  for (i = 0; i < NUM_MINODES; i++) {
     minode *mp = &minode_arr[i];
     if (mp->refCount == 0) {
       mp->refCount = 1;
@@ -103,12 +103,12 @@ int put_block(int dev, int blk, char *buf) {
 
 minode *iget(int dev, int ino) {
   minode *mip;
-  mtable *mp;
+  mount_table *mp;
   inode *ip;
   int i, block, offset;
   char buf[BLKSIZE];
   // serach in-memory minodes first
-  for (i = 0; i < NMINODE; i++) {
+  for (i = 0; i < NUM_MINODES; i++) {
     minode *mip = &minode_arr[i];
     if (mip->refCount && (mip->dev == dev) && (mip->ino == ino)) {
       mip->refCount++;
