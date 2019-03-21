@@ -2,21 +2,39 @@
     "version": "2.0.0",
     "tasks": [
         {
-            "label": "gcc 32bit",
+            "label": "Build/Dev",
             "type": "shell",
             "command": "gcc",
             "args": [
-                "main.c",
-                "src/file_man.c",
-                "src/mount.c",
+                "src/main.c",
+                "src/fs/fs_util.c",
+                "src/fs/fs_mount.c",
                 "-g",
                 "-o",
-                "file_man.out"
+                "fs_dev.out"
             ],
             "group": {
                 "kind": "build",
                 "isDefault": true
-            }
+            },
+            "problemMatcher": []
+        },
+        {
+            "label": "Build/Prod",
+            "type": "shell",
+            "command": "gcc",
+            "args": [
+                "src/main.c",
+                "src/fs/fs_util.c",
+                "src/fs/fs_mount.c",
+                "-o",
+                "fs.out"
+            ],
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "problemMatcher": []
         }
     ]
 }

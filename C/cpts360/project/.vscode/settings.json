@@ -1,5 +1,10 @@
 {
     "files.associations": {
         "stdlib.h": "c"
+    },
+    "search.exclude": {
+        "./resource": true,
+        "./.vscode": true,
+        "./.ccls-cache": true,
     }
 }
