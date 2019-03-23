@@ -59,17 +59,17 @@ int free_minode(minode *mip) // release a used minode
 // block into/from a buffer area in memory.
 
 int get_block(int dev, int blk, char *buf) {
-  lseek(dev, blk * BLKSIZE, SEEK_SET);
-  int n = read(dev, buf, BLKSIZE);
+  lseek(dev, blk * BLKSIZE_1024, SEEK_SET);
+  int n = read(dev, buf, BLKSIZE_1024);
   if (n < 0)
     printf("get_block[% d % d] error \n", dev, blk);
   return 0;
 }
 
 int put_block(int dev, int blk, char *buf) {
-  lseek(dev, blk * BLKSIZE, SEEK_SET);
-  int n = write(dev, buf, BLKSIZE);
-  if (n != BLKSIZE)
+  lseek(dev, blk * BLKSIZE_1024, SEEK_SET);
+  int n = write(dev, buf, BLKSIZE_1024);
+  if (n != BLKSIZE_1024)
     printf("put_block [%d %d] error\n", dev, blk);
   return 0;
 }
@@ -88,7 +88,7 @@ minode *get_inode(int dev, int ino) {
   mount_entry *me = &mount_entry_arr[0];
   inode *ip;
   int i, block, offset;
-  char buf[BLKSIZE];
+  char buf[BLKSIZE_1024];
   // serach in-memory minodes first
   for (i = 0; i < NUM_MINODES; i++) {
     minode *mip = &minode_arr[i];
@@ -100,7 +100,7 @@ minode *get_inode(int dev, int ino) {
   mip = alloc_minode();
   mip->dev = dev;
   mip->ino = ino;
-  block = (ino - 1) / 8 + me->iblock;
+  block = (ino - 1) / 8 + me->dev_gd.bg_inode_table;
   offset = (ino - 1) % 8;
   get_block(dev, block, buf);
   ip = (inode *)buf + offset;
@@ -109,7 +109,7 @@ minode *get_inode(int dev, int ino) {
   mip->refCount = 1;
   mip->mounted = 0;
   mip->dirty = 0;
-  mip->mntPtr = 0;
+  mip->mount_entry = 0;
   return mip;
 }
 
@@ -124,7 +124,7 @@ minode *get_inode(int dev, int ino) {
 int put_inode(minode *mip) {
   inode *ip;
   int i, block, offset;
-  char buf[BLKSIZE];
+  char buf[BLKSIZE_1024];
   if (mip == 0)
     return 0;
   mip->refCount--;
@@ -132,7 +132,7 @@ int put_inode(minode *mip) {
     return 0;
   if (mip->dirty == 0)
     return 0;
-  block = (mip->ino - 1) / 8 + mount_entry_arr[0].iblock;
+  block = (mip->ino - 1) / 8 + mount_entry_arr[0].dev_gd.bg_inode_table;
   offset = (mip->ino - 1) % 8;
   // get block containing this inode
   get_block(mip->dev, block, buf);
@@ -175,7 +175,7 @@ int tokenize_path(char *pathname) {
 
 int search_path(minode *mip, char *name) {
   int i;
-  char *cp, temp[256], sbuf[BLKSIZE];
+  char *cp, temp[256], sbuf[BLKSIZE_1024];
   dir_entry *dp;
   for (i = 0; i < 12; i++) { // search dir_entry direct blocks only
     if (mip->inode.i_block[i] == 0)
@@ -183,7 +183,7 @@ int search_path(minode *mip, char *name) {
     get_block(mip->dev, mip->inode.i_block[i], sbuf);
     dp = (dir_entry *)sbuf;
     cp = sbuf;
-    while (cp < sbuf + BLKSIZE) {
+    while (cp < sbuf + BLKSIZE_1024) {
       strncpy(temp, dp->name, dp->name_len);
       temp[dp->name_len] = 0;
       printf("%8d%8d%8u %s\n", dp->inode, dp->rec_len, dp->name_len, temp);
@@ -205,7 +205,7 @@ int search_inode(char *pathname) {
     return 2; // return root ino = 2
   }
   if (pathname[0] == '/')
-    mip = root_inode; // if absolute
+    mip = global_root; // if absolute
   else
     mip = running->cwd; // if relative
   mip->refCount++;

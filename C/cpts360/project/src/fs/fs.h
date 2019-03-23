@@ -1,5 +1,7 @@
 #ifndef _CPTS360_FS_H
 #define _CPTS360_FS_H
+
+#include "../debug/debug.h"
 #include <ext2fs/ext2_fs.h>
 #include <fcntl.h>
 #include <stdio.h>
@@ -20,7 +22,7 @@ typedef struct ext2_dir_entry_2 dir_entry;
 //// CONST ////
 
 // Block size
-#define BLKSIZE 1024
+#define BLKSIZE_1024 1024
 
 // Inode numbers of EXT2 as defined in ext2fs.h
 // EXT2_BAD_INO 1         Bad blocks inode
@@ -83,33 +85,31 @@ typedef struct minode {
   // mounted flag
   int mounted;
   // mount entry pointer
-  struct mount_entry *mntPtr;
+  struct mount_entry *mount_entry;
   // ignored for simple FS
   // int lock;
 } minode;
 
 // Mount Entry structure
 typedef struct mount_entry {
-  // device fd;
+  // device file descriptor
   int dev_fd;
-  // from superblock
-  int ninodes;
-  int nblocks;
-  // from superblock and group_desc
-  int free_blocks;
-  int free_inodes;
-  // from group descriptor
-  int bmap;
-  int imap;
-  // inodes start block
-  int iblock;
-  // mount point dir_entry pointer
-  minode *mnt_dir_ptr;
-  // device name
-  char dev_name[64];
-  // mount point dir_entry name
-  char mnt_name[64];
+  // device root inode
+  minode *dev_root;
+  // device path ex: ~/project/exampledisk
+  char dev_path[64];
+  // mount path ex: / for root, /A or /B or /C ... for non-root
+  char mnt_path[64];
+  // superblock
+  super_block dev_sb;
+  // group_desc
+  group_desc dev_gd;
 } mount_entry;
+
+// REMOVED
+// bmap == dev_gd->bg_block_bitmap;
+// imap == dev_gd->bg_inode_bitmap;
+// iblock == dev_gd->bg_inode_table;
 
 //// VAR ////
 
@@ -117,10 +117,12 @@ typedef struct mount_entry {
 minode minode_arr[NUM_MINODES];
 
 // root mounted inode
-minode *root_inode;
+minode *global_root;
 
 // mount tables
 mount_entry mount_entry_arr[NUM_MOUNT_ENTRIES];
+
+mount_entry *root_mount;
 
 // Opened file instance
 oft oft_arr[NUM_OFT];

@@ -1,3 +1,4 @@
+#include "../debug/debug.h"
 #include "cmd.h"
 #include <errno.h>
 #include <fcntl.h>
@@ -10,7 +11,34 @@
 #include <sys/wait.h>
 #include <unistd.h>
 
-int make_cmd(char *line, cmd *c) {
+int do_cmd(cmd *c) {
+  if (!c)
+    DEBUG_PRINT("cmd was null\n");
+  if (!strcmp(c->argv[0], "cd")) {
+    do_cd(c);
+  } else if (!strcmp(c->argv[0], "mkdir")) {
+    do_mkdir(c);
+  } else if (!strcmp(c->argv[0], "pwd")) {
+    do_pwd(c);
+  } else if (!strcmp(c->argv[0], "rmdir")) {
+    do_rmdir(c);
+  } else if (!strcmp(c->argv[0], "stat")) {
+    do_stat(c);
+  } else if (!strcmp(c->argv[0], "symlink")) {
+    do_symlink(c);
+  } else if (!strcmp(c->argv[0], "touch")) {
+    do_touch(c);
+  } else if (!strcmp(c->argv[0], "unlink")) {
+    do_unlink(c);
+  } else if (!strcmp(c->argv[0], "quit")) {
+    exit(0);
+  } else {
+    printf("command not recognized: %s\n", c->argv[0]);
+  }
+  return 0;
+}
+
+int parse_cmd(char *line, cmd *c) {
   // split by whitespace into cmd struct
   int i = 0;
   char *s = strtok(line, " ");

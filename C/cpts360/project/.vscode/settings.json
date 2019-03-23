@@ -1,6 +1,7 @@
 {
     "files.associations": {
-        "stdlib.h": "c"
+        "stdlib.h": "c",
+        "fs.h": "c"
     },
     "search.exclude": {
         "./resource": true,

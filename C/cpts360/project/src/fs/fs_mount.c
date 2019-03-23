@@ -2,11 +2,10 @@
 
 int mount_root(char *dev_path) {
   int i;
-
   mount_entry *me;
   super_block *sb;
   group_desc *gd;
-  char buf[BLKSIZE];
+  char buf[BLKSIZE_1024];
   int dev = open(dev_path, O_RDWR);
   if (dev < 0) {
     printf("panic : can’t open root device\n");
@@ -21,31 +20,31 @@ int mount_root(char *dev_path) {
            dev_path);
     exit(0);
   }
-  // fill mount table mtable_arr[0] with device information
+  // fill mount table root with device information
   me = &mount_entry_arr[0];
-  // use mtable[0]
   me->dev_fd = dev;
-  // copy super block info into mtable_arr[0]
-  me->ninodes = sb->s_inodes_count;
-  me->nblocks = sb->s_blocks_count;
-  strcpy(me->dev_name, dev_path);
-  strcpy(me->mnt_name, "/");
+  strcpy(me->dev_path, dev_path);
+  strcpy(me->mnt_path, "/");
+  // copy super block info into mount entry
+  me->dev_sb = *sb;
+  // get group descriptor from device
   get_block(dev, 2, buf);
   gd = (group_desc *)buf;
-  me->bmap = gd->bg_block_bitmap;
-  me->imap = gd->bg_inode_bitmap;
-  me->iblock = gd->bg_inode_table;
-  printf("bmap=%d imap=%d iblock=%d\n", me->bmap, me->imap, me->iblock);
+  // copy group descriptor into mount entry
+  me->dev_gd = *gd;
+
+  DEBUG_PRINT("block_bitmap=%d inode_bitmap=%d inode_table=%d\n",
+              me->dev_gd.bg_block_bitmap, me->dev_gd.bg_inode_bitmap,
+              me->dev_gd.bg_inode_table);
   // call get_inode(), which inc minode’s refCount
-  root_inode = get_inode(dev, 2);
-  // get root inode
-  me->mnt_dir_ptr = root_inode;
+  me->dev_root = get_inode(dev, 2);
+  // set global root
+  global_root = me->dev_root;
   // double link
-  root_inode->mntPtr = me;
+  global_root->mount_entry = me;
   // set proc CWDs
-  for (i = 0; i < NUM_PROCS; i++)
-    // set proc’s CWD
-    proc_arr[i].cwd = get_inode(dev, 2); // each inc refCount by 1
-  printf("mount : %s mounted on / \n", dev_path);
+  for (i = 0; i < NUM_PROCS; i++)        // set proc’s CWD
+    proc_arr[i].cwd = get_inode(dev, 2); // increments refCount
+  DEBUG_PRINT("mount : %s mounted on / \n", dev_path);
   return 0;
 }

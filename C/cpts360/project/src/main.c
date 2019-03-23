@@ -1,20 +1,24 @@
+#include "cmd/cmd.h"
 #include "fs/fs.h"
 
 int main(int argc, char const *argv[]) {
-  char line[128], cmd[16], pathname[64];
-  char *rootdev;
+  char line[128], *root_dev;
+  cmd c, *user_cmd = &c;
   if (argc > 1)
-    rootdev = (char *)argv[1];
+    root_dev = (char *)argv[1];
   fs_init();
-  mount_root(rootdev);
-  while (1) {
-    printf("P%d running: ", running->pid);
-    printf("input command : ");
+  mount_root(root_dev);
+  for (;;) {
+    DEBUG_PRINT("running->pid == %d\n", running->pid);
+    printf("input command: ");
     fgets(line, 128, stdin);
     line[strlen(line) - 1] = 0;
     if (!line[0])
       continue;
-    sscanf(line, "%s %s", cmd, pathname);
-    printf("ECHO: cmd=%s pathnam=%s\n", cmd, pathname);
+    parse_cmd(line, user_cmd);
+    for (int i = 0; i < user_cmd->argc; i++)
+      DEBUG_PRINT("user_cmd->argv[%d] == %s\n", i, user_cmd->argv[i]);
+    DEBUG_PRINT("running->pid == %d\n", running->pid);
+    do_cmd(user_cmd);
   }
 }
