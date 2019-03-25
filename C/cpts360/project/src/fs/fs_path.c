@@ -35,11 +35,11 @@ int parse_path(char *path_name, path *buf_path) {
     // split into components
     s = strtok(safe_path, "/");
     while (s) {
-      buf_path->argv[buf_path->argc++] = s;
+      strcpy(buf_path->argv[buf_path->argc++], s);
       s = strtok(NULL, "/");
     }
   }
-  buf_path->argv[buf_path->argc] = NULL;
+  buf_path->argv[buf_path->argc][0] = 0;
   return buf_path->argc;
 }
 

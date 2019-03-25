@@ -10,7 +10,7 @@
             "request": "launch",
             "program": "${workspaceFolder}/fs_dev.out",
             "args": [
-                "resource/exampledisk"
+                "resource/diskimage"
             ],
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}",

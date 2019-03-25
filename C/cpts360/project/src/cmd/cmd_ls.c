@@ -13,10 +13,10 @@ bool do_ls(cmd *c) {
     if (!found)
       return 1;
     entryc = list_dir(found, dep);
+    put_inode(found);
   }
   for (int i = 0; i < entryc; i++)
-    printf("%s\t", dep[i].name);
+    printf("%s\n", dep[i].name);
 
-  printf("\n");
   return 0;
 }

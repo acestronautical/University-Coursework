@@ -10,6 +10,7 @@ typedef struct cmd {
 } cmd;
 
 // specific commands
+bool do_blocks(cmd *);
 bool do_cd(cmd *);
 bool do_chmod(cmd *);
 bool do_creat(cmd *);

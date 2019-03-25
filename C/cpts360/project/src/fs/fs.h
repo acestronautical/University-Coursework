@@ -63,8 +63,8 @@ typedef struct ext2_dir_entry_2 dir_entry;
 
 // for parsing paths into
 typedef struct path {
-  char *argv[4096]; // count of strings
-  int argc;         // array of strings
+  char argv[4096][64]; // count of strings
+  int argc;            // array of strings
   bool is_absolute;
   bool is_root;
 } path;
