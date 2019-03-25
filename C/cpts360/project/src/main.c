@@ -18,7 +18,6 @@ int main(int argc, char const *argv[]) {
     parse_cmd(line, user_cmd);
     for (int i = 0; i < user_cmd->argc; i++)
       DEBUG_PRINT("user_cmd->argv[%d] == %s\n", i, user_cmd->argv[i]);
-    DEBUG_PRINT("running->pid == %d\n", running->pid);
     do_cmd(user_cmd);
   }
 }

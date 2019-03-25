@@ -1,40 +1,31 @@
 #include "cmd.h"
 bool do_blocks(cmd *c) {
-  int i;
   char buf1[BLKSIZE_1024], buf2[BLKSIZE_1024], buf3[BLKSIZE_1024];
   int *fs_p1, *fs_p2, *fs_p3;
   path in_path;
-  parse_path(c->argv[1], &in_path);
-  minode m, *found_minode = &m;
-  found_minode = search_path(&in_path);
-  if (!found_minode)
-    return false;
-  inode *found_inode = &found_minode->inode;
-  // do block stuff
-  printf("direct blocks:\n");
-  for (i = 0; i < 12; i++) {
-    if (!found_inode->i_block[i])
-      break;
-    printf("%u\t", found_inode->i_block[i]);
-  }
-  printf("\n");
+  minode *mip;
 
-  printf("indirect blocks:\n");
-  get_block(found_minode->dev, found_inode->i_block[12], buf1);
-  if (found_inode->i_block[12])
-    printf("[%u] :\n", found_inode->i_block[12]);
+  parse_path(c->argv[1], &in_path);
+  if (!(mip = search_path(&in_path)))
+    return false;
+
+  printf("\ndirect blocks:\n");
+  for (int i = 0; i < 12 && mip->inode.i_block[i]; i++)
+    printf("%u\t", mip->inode.i_block[i]);
+
+  get_block(mip->dev, mip->inode.i_block[12], buf1);
+  if (mip->inode.i_block[12])
+    printf("\nindirect blocks:\n[%u] :\n", mip->inode.i_block[12]);
   fs_p1 = (int *)buf1;
   while (*fs_p1)
     printf("%u\t", *fs_p1++);
-  printf("\n");
 
-  printf("double indirect blocks:\n");
-  get_block(found_minode->dev, found_inode->i_block[13], buf1);
-  if (found_inode->i_block[13])
-    printf("[%u] :\n", found_inode->i_block[13]);
+  get_block(mip->dev, mip->inode.i_block[13], buf1);
+  if (mip->inode.i_block[13])
+    printf("\ndouble indirect blocks:\n[%u] :\n", mip->inode.i_block[13]);
   fs_p1 = (int *)buf1;
   while (*fs_p1) {
-    get_block(found_minode->dev, *fs_p1, buf2);
+    get_block(mip->dev, *fs_p1, buf2);
     printf("[%u] :\n", *fs_p1);
     fs_p2 = (int *)buf2;
     while (*fs_p2)
@@ -42,10 +33,29 @@ bool do_blocks(cmd *c) {
     printf("\n");
     fs_p1++;
   }
+
+  get_block(mip->dev, mip->inode.i_block[14], buf1);
+  if (mip->inode.i_block[14])
+    printf("triple indirect blocks:\n[%u] :\n", mip->inode.i_block[14]);
+  fs_p1 = (int *)buf1;
+  while (*fs_p1) {
+    get_block(mip->dev, *fs_p1, buf2);
+    printf("[%u] :\n", *fs_p1);
+    fs_p2 = (int *)buf2;
+    while (*fs_p2) {
+      get_block(mip->dev, *fs_p2, buf3);
+      printf("[%u] :\n", *fs_p2);
+      fs_p3 = (int *)buf3;
+      while (*fs_p3)
+        printf("%u\t", *fs_p3++);
+      printf("\n");
+      fs_p2++;
+    }
+    printf("\n");
+    fs_p1++;
+  }
   printf("\n");
 
-  // printf("triple indirect blocks:\n");
-
-  put_inode(found_minode);
+  put_inode(mip);
   return true;
 }
