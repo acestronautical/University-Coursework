@@ -1,6 +1,22 @@
 #include "cmd.h"
 
-int do_ls(cmd *c) {
-  printf("command not yet implemented\n");
+bool do_ls(cmd *c) {
+  dir_entry dep[4096];
+  int entryc;
+  if (c->argc < 2)
+    entryc = list_dir(global_root, dep);
+  else {
+    path in_path;
+    parse_path(c->argv[1], &in_path);
+    minode m, *found = &m;
+    found = search_path(&in_path);
+    if (!found)
+      return 1;
+    entryc = list_dir(found, dep);
+  }
+  for (int i = 0; i < entryc; i++)
+    printf("%s\t", dep[i].name);
+
+  printf("\n");
   return 0;
 }

@@ -1,6 +1,6 @@
 #include "cmd.h"
 
-int do_unlink(cmd *c) {
+bool do_unlink(cmd *c) {
   printf("command not yet implemented\n");
   return 0;
 }

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "../fs/fs.h"
+#include <stdbool.h>
 #include <stdio.h>
 
 typedef struct cmd {
@@ -9,20 +10,20 @@ typedef struct cmd {
 } cmd;
 
 // specific commands
-int do_cd(cmd *);
-int do_chmod(cmd *);
-int do_creat(cmd *);
-int do_link(cmd *);
-int do_ls(cmd *);
-int do_mkdir(cmd *);
-int do_pwd(cmd *);
-int do_rmdir(cmd *);
-int do_stat(cmd *);
-int do_symlink(cmd *);
-int do_touch(cmd *);
-int do_unlink(cmd *);
+bool do_cd(cmd *);
+bool do_chmod(cmd *);
+bool do_creat(cmd *);
+bool do_link(cmd *);
+bool do_ls(cmd *);
+bool do_mkdir(cmd *);
+bool do_pwd(cmd *);
+bool do_rmdir(cmd *);
+bool do_stat(cmd *);
+bool do_symlink(cmd *);
+bool do_touch(cmd *);
+bool do_unlink(cmd *);
 
 // utility
-int do_cmd(cmd *c);
+bool do_cmd(cmd *c);
 int parse_cmd(char *, cmd *);
 int spawn_proc(int, int, cmd *);

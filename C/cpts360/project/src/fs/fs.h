@@ -4,6 +4,7 @@
 #include "../debug/debug.h"
 #include <ext2fs/ext2_fs.h>
 #include <fcntl.h>
+#include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -47,7 +48,26 @@ typedef struct ext2_dir_entry_2 dir_entry;
 #define NUM_FD 10
 #define NUM_OFT 40
 
-//// STRUCT ////
+// File types as defined in stat.h
+// #define __S_IFDIR 0040000  /* Directory.  */
+// #define __S_IFCHR 0020000  /* Character device.  */
+// #define __S_IFBLK 0060000  /* Block device.  */
+// #define __S_IFREG 0100000  /* Regular file.  */
+// #define __S_IFIFO 0010000  /* FIFO.  */
+// #define __S_IFLNK 0120000  /* Symbolic link.  */
+// #define __S_IFSOCK 0140000 /* Socket.  */
+
+//// STRUCTS ////
+
+// oft, proc, minode, mount_entry
+
+// for parsing paths into
+typedef struct path {
+  char *argv[4096]; // count of strings
+  int argc;         // array of strings
+  bool is_absolute;
+  bool is_root;
+} path;
 
 // Open file Table AKA opened file instance
 typedef struct oft {
@@ -93,6 +113,7 @@ typedef struct minode {
 // Mount Entry structure
 typedef struct mount_entry {
   // device file descriptor
+  // also used for null check
   int dev_fd;
   // device root inode
   minode *dev_root;
@@ -133,14 +154,18 @@ proc proc_arr[NUM_PROCS];
 // current executing PROC
 proc *running;
 
-// tokenized component string strings
-char gline[25], *name[16];
-
-int nname;
-
 //// FUNC ////
 
-int run_file_manager(int argc, char const *argv[]);
+// fs_mount
+int mount_root(char *);
+
+// fs_path
+int parse_path(char *, path *);
+int search_dir(minode *, char *);
+minode *search_path(path *);
+int list_dir(minode *mip, dir_entry *);
+
+// fs_util
 int fs_init();
 minode *alloc_minode();
 int free_minode(minode *);
@@ -148,8 +173,5 @@ int get_block(int, int, char *);
 int put_block(int, int, char *);
 minode *get_inode(int, int);
 int put_inode(minode *);
-int tokenize_path(char *);
-int search_path(minode *, char *);
-int search_inode(char *);
-int mount_root(char *);
+
 #endif

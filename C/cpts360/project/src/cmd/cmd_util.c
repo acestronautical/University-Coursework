@@ -11,11 +11,19 @@
 #include <sys/wait.h>
 #include <unistd.h>
 
-int do_cmd(cmd *c) {
+bool do_cmd(cmd *c) {
   if (!c)
     DEBUG_PRINT("cmd was null\n");
   if (!strcmp(c->argv[0], "cd")) {
     do_cd(c);
+  } else if (!strcmp(c->argv[0], "chmod")) {
+    do_chmod(c);
+  } else if (!strcmp(c->argv[0], "creat")) {
+    do_creat(c);
+  } else if (!strcmp(c->argv[0], "link")) {
+    do_link(c);
+  } else if (!strcmp(c->argv[0], "ls")) {
+    do_ls(c);
   } else if (!strcmp(c->argv[0], "mkdir")) {
     do_mkdir(c);
   } else if (!strcmp(c->argv[0], "pwd")) {

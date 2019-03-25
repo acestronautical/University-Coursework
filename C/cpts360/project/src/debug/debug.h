@@ -3,7 +3,7 @@
 //// DEBUG ////
 
 // uncommment for debug mode
-#define DEBUG_MODE
+#define DEBUG_MODE 1
 
 // debug messages
 #if defined DEBUG_MODE
