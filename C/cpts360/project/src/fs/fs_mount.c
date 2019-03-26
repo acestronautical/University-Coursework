@@ -22,24 +22,24 @@ int mount_root(char *dev_path) {
   }
   // fill mount table root with device information
   me = &mount_entry_arr[0];
-  me->dev_fd = dev;
+  me->fd = dev;
   strcpy(me->dev_path, dev_path);
   strcpy(me->mnt_path, "/");
   // copy super block info into mount entry
-  me->dev_sb = *sb;
+  me->super_block = *sb;
   // get group descriptor from device
   get_block(dev, 2, buf);
   gd = (group_desc *)buf;
   // copy group descriptor into mount entry
-  me->dev_gd = *gd;
+  me->group_desc = *gd;
 
   DEBUG_PRINT("block_bitmap=%d inode_bitmap=%d inode_table=%d\n",
-              me->dev_gd.bg_block_bitmap, me->dev_gd.bg_inode_bitmap,
-              me->dev_gd.bg_inode_table);
+              me->group_desc.bg_block_bitmap, me->group_desc.bg_inode_bitmap,
+              me->group_desc.bg_inode_table);
   // call get_inode(), which inc minode’s refCount
-  me->dev_root = get_inode(dev, 2);
+  me->root = get_inode(dev, 2);
   // set global root
-  global_root = me->dev_root;
+  global_root = me->root;
   // double link
   global_root->mount_entry = me;
   // set proc CWDs
