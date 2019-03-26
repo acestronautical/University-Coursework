@@ -85,7 +85,7 @@ int list_dir(minode *mip, dir_entry *dir_list) {
   // direct
   for (; i < 12; i++) { // search dir_entry direct blocks only
     if (mip->inode.i_block[i] == 0)
-      return dir_list_index + 1;
+      return dir_list_index;
     get_block(mip->dev, mip->inode.i_block[i], buf);
     dep = (dir_entry *)buf;
     fs_p = buf;
@@ -97,7 +97,7 @@ int list_dir(minode *mip, dir_entry *dir_list) {
     }
   }
   // todo: indirect and double indirect
-  return dir_list_index + 1;
+  return dir_list_index;
 }
 
 minode *search_path(path *target_path) {
