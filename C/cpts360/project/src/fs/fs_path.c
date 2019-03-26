@@ -76,30 +76,31 @@ int search_dir(minode *mip, char *dir_name) {
 
 // returns an array of dir_entry from a dir minode
 // only supports direct blocks
-int list_dir(minode *mip, dir_entry *dir_list) {
-  char *fs_p, temp[256], buf[BLKSIZE_1024];
-  dir_entry *dep;
-  int i = 0, dir_list_index = 0;
+int list_dir(minode *mip, dir_entry *dir_arr) {
+  char *fs_p, buf[BLKSIZE_1024];
+  dir_entry *dirp;
+  int dirc = 0;
   if (!S_ISDIR(mip->inode.i_mode))
     return 0;
-  // direct
-  for (; i < 12; i++) { // search dir_entry direct blocks only
+  for (int i = 0; i < 12; i++) { // search direct blocks only
     if (mip->inode.i_block[i] == 0)
-      return dir_list_index;
+      return dirc;
     get_block(mip->dev, mip->inode.i_block[i], buf);
-    dep = (dir_entry *)buf;
+    dirp = (dir_entry *)buf;
     fs_p = buf;
+    // todo: double check this condition
     while (fs_p < buf + BLKSIZE_1024) {
-      dep = (dir_entry *)fs_p;
-      dir_list[dir_list_index] = *dep;
-      dir_list_index++;
-      fs_p += dep->rec_len;
+      dirp = (dir_entry *)fs_p;
+      dir_arr[dirc] = *dirp;
+      dirc++;
+      fs_p += dirp->rec_len;
     }
   }
   // todo: indirect and double indirect
-  return dir_list_index;
+  return dirc;
 }
 
+// must put_inode on returned minode when done
 minode *search_path(path *target_path) {
   minode *mip;
   int i, ino;
@@ -124,7 +125,7 @@ minode *search_path(path *target_path) {
     // release current minode
     put_inode(mip);
     // switch to new minode
-    mip = get_inode(mount_entry_arr[0].dev_fd, ino);
+    mip = get_inode(mount_entry_arr[0].fd, ino);
   }
   return mip;
 }

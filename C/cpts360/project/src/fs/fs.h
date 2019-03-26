@@ -48,15 +48,6 @@ typedef struct ext2_dir_entry_2 dir_entry;
 #define NUM_FD 10
 #define NUM_OFT 40
 
-// File types as defined in stat.h
-// #define __S_IFDIR 0040000  /* Directory.  */
-// #define __S_IFCHR 0020000  /* Character device.  */
-// #define __S_IFBLK 0060000  /* Block device.  */
-// #define __S_IFREG 0100000  /* Regular file.  */
-// #define __S_IFIFO 0010000  /* FIFO.  */
-// #define __S_IFLNK 0120000  /* Symbolic link.  */
-// #define __S_IFSOCK 0140000 /* Socket.  */
-
 //// STRUCTS ////
 
 // oft, proc, minode, mount_entry
@@ -68,30 +59,6 @@ typedef struct path {
   bool is_absolute;
   bool is_root;
 } path;
-
-// Open file Table AKA opened file instance
-typedef struct oft {
-  // file mode
-  int mode;
-  // number of PROCs sharing this instance
-  int refCount;
-  // pointer to minode of file
-  struct minode *minodePtr;
-  // byte offset for R|W
-  int offset;
-} oft;
-
-// PROC structure
-typedef struct proc {
-  struct proc *next;
-  int pid;
-  int uid;
-  int gid;
-  int ppid;
-  int status;
-  struct minode *cwd;
-  oft *fd[NUM_FD];
-} proc;
 
 // In-memory inodes structure
 typedef struct minode {
@@ -110,21 +77,45 @@ typedef struct minode {
   // int lock;
 } minode;
 
+// Open file Table AKA opened file instance
+typedef struct oft {
+  // file mode
+  int mode;
+  // number of PROCs sharing this instance
+  int ref_count;
+  // pointer to minode of file
+  minode *minode;
+  // byte offset for R|W
+  int offset;
+} oft;
+
+// PROC structure
+typedef struct proc {
+  struct proc *next;
+  int pid;
+  int uid;
+  int gid;
+  int ppid;
+  int status;
+  minode *cwd;
+  oft *oft_arr[NUM_FD];
+} proc;
+
 // Mount Entry structure
 typedef struct mount_entry {
   // device file descriptor
   // also used for null check
-  int dev_fd;
+  int fd;
   // device root inode
-  minode *dev_root;
+  minode *root;
   // device path ex: ~/project/exampledisk
   char dev_path[64];
   // mount path ex: / for root, /A or /B or /C ... for non-root
   char mnt_path[64];
   // superblock
-  super_block dev_sb;
+  super_block super_block;
   // group_desc
-  group_desc dev_gd;
+  group_desc group_desc;
 } mount_entry;
 
 // REMOVED

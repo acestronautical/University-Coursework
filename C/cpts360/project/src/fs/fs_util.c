@@ -9,7 +9,7 @@ int fs_init() {
     minode_arr[i].refCount = 0;
   // initialize mount entries
   for (i = 0; i < NUM_MOUNT_ENTRIES; i++)
-    mount_entry_arr[i].dev_fd = 0;
+    mount_entry_arr[i].fd = 0;
   // initialize PROCs
   for (i = 0; i < NUM_PROCS; i++) {
     proc_arr[i].status = PROC_FREE;
@@ -18,7 +18,7 @@ int fs_init() {
     proc_arr[i].uid = i;
     // initialize PROC file descriptors to NULL
     for (j = 0; j < NUM_FD; j++)
-      proc_arr[i].fd[j] = 0;
+      proc_arr[i].oft_arr[j] = 0;
     proc_arr[i].next = &proc_arr[i + 1];
   }
   // circular list
@@ -83,13 +83,14 @@ int put_block(int dev, int blk, char *buf) {
 // shall assume that minode locking is unnecessary, which will
 // be explained later.
 
+// todo: rename to get_minode?
 minode *get_inode(int dev, int ino) {
   minode *mip;
   mount_entry *me = &mount_entry_arr[0];
   inode *ip;
   int i, block, offset;
   char buf[BLKSIZE_1024];
-  // serach in-memory minodes first
+  // search in-memory minodes first
   for (i = 0; i < NUM_MINODES; i++) {
     minode *mip = &minode_arr[i];
     if (mip->refCount && (mip->dev == dev) && (mip->ino == ino)) {
@@ -98,18 +99,21 @@ minode *get_inode(int dev, int ino) {
     }
   }
   mip = alloc_minode();
-  mip->dev = dev;
-  mip->ino = ino;
-  block = (ino - 1) / 8 + me->dev_gd.bg_inode_table;
+  block = (ino - 1) / 8 + me->group_desc.bg_inode_table;
   offset = (ino - 1) % 8;
   get_block(dev, block, buf);
   ip = (inode *)buf + offset;
-  mip->inode = *ip;
   // initialize minode
-  mip->refCount = 1;
-  mip->mounted = 0;
-  mip->dirty = 0;
-  mip->mount_entry = 0;
+  // todo: check if mount_entry is set correctly
+  *mip = (minode){
+      .inode = *ip,
+      .dev = dev,
+      .ino = ino,
+      .refCount = 1,
+      .dirty = 0,
+      .mounted = 0,
+      .mount_entry = 0,
+  };
   return mip;
 }
 
@@ -121,6 +125,7 @@ minode *get_inode(int dev, int ino) {
 // returns. If the caller is the last user of the minode (refCount 1⁄4 0), the
 // INODE is written back to disk if it is modified (dirty).
 
+// todo: rename to put_minode?
 int put_inode(minode *mip) {
   inode *ip;
   int i, block, offset;
@@ -132,7 +137,7 @@ int put_inode(minode *mip) {
     return 0;
   if (mip->dirty == 0)
     return 0;
-  block = (mip->ino - 1) / 8 + mount_entry_arr[0].dev_gd.bg_inode_table;
+  block = (mip->ino - 1) / 8 + mount_entry_arr[0].group_desc.bg_inode_table;
   offset = (mip->ino - 1) % 8;
   // get block containing this inode
   get_block(mip->dev, block, buf);
