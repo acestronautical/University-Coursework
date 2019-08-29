@@ -1,0 +1,18 @@
+{
+    "search.exclude": {
+        "./resource": true,
+        "./.vscode": true,
+        "./.ccls-cache": true,
+    },
+    "C_Cpp.clang_format_fallbackStyle": "LLVM",
+    "editor.formatOnSave": true,
+    "files.associations": {
+        "fs.h": "c",
+        "cmd.h": "c",
+        "fcntl.h": "c",
+        "stdbool.h": "c",
+        "types.h": "c",
+        "features.h": "c",
+        "fcntl-linux.h": "c"
+    },
+}
