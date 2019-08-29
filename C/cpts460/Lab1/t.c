@@ -10,108 +10,106 @@ typedef unsigned long u32;
 #define CYL 36
 #define BLK 1024
 
-#include "./ext2.h"
+#include "ext2.h"
 typedef struct ext2_group_desc GD;
 typedef struct ext2_inode INODE;
 typedef struct ext2_dir_entry_2 DIR;
 
 int prints(char *s) {
-  while (*s) {
-    if (*s == '\n')
-      putc('\r');
-  putc(*s++);
-  }
-}
-
-int gets(char *s) {
-  while (*s = getc() != '\r')
+  while (*s) 
     putc(*s++);
-  *s = '\0';
-  putc('\r'), putc('\n');
 }
 
-u16 NSEC = 2;
-u16 i, j;
-char buf1[BLK], buf2[BLK];
-u16 inode_table;
+// int gets(char *s) {
+//   while (*s = getc() != '\r')
+//     putc(*s++);
+//   *s = '\0';
+//   putc('\r'), putc('\n');
+// }
 
-u16 getblk(u16 blk, char *buf) {
+// don't know what this is for
+u16 NSEC = 2; 
+// Block buffers
+char buf1[BLK], buf2[BLK];
+
+int getblk(u16 blk, char *buf) {
   readfd((2 * blk) / CYL, ((2 * blk) % CYL) / TRK, ((2 * blk) % CYL) % TRK,
          buf);
 }
 
-u8 streq(char *s1, char *s2) {
-  while (*s1 && *s2 && *s1 == *s2)
-    ;
-  return *s1 == *s2;
-}
-
-strncpy(char *src, char *dest, u8 n) {
-  for (i = 0; i < n && src[i]; i++)
-    dest[i] = src[i];
-  dest[++i] = '\0';
-}
-
-INODE* get_inode(int ino){
-  u16 block, offset;
-  block = (ino - 1) / 8 + inode_table;
-  offset = (ino - 1) % 8;
-  getblk(block, buf2);
-  return (INODE*)buf2 + offset;
-}
+// u8 streq(char *s1, char *s2) {
+//   while (*s1 && *s2 && *s1 == *s2)
+//     s1++, s2++;
+//   return *s1 == *s2;
+// }
 
 u16 search(INODE *ip, char *name) {
-  // search direct blocks only
-  char *buf1p;
+  char c, i;
   DIR *dp;
+  // for each direct block
   for (i = 0; i < 12; i++) {
-    // if direct block is null error
-    if (!ip->i_block[i]){
-      prints("null\n");
+    // if block is zero error
+    if ((u16)ip->i_block[i] == 0)
       error();
-    }
-    // get next direct block
-    getblk((u16)ip->i_block[i], buf1);
-    dp = (DIR *)buf1;
-    buf1p = buf1;
-    while (buf1p < buf1 + BLK) {
-      strncpy(buf2, dp->name, dp->name_len);
-      prints(buf2);
-      prints("\n");
-      if (streq(name, buf2))
-        return dp->inode;
-      buf1p += dp->rec_len;
-      dp = (DIR *)buf1p;
+    // read block into buf2
+    getblk((u16)ip->i_block[i], buf2);
+    dp = (DIR *)buf2;
+    // for each dir to end of block
+    while ((char *)dp < buf2 + BLK) {
+      // null terminate dp->name
+      c = dp->name[dp->name_len];
+      dp->name[dp->name_len] = '\0';
+      prints(dp->name), putc(' ');
+      if (!strcmp(name, dp->name)) {
+        dp->name[dp->name_len] = c;
+        prints("\r\n");
+        return (u16)dp->inode;
+      }
+      // restore overwritten char
+      dp->name[dp->name_len] = c;
+      // go to next dir
+      dp = (char *)dp + dp->rec_len;
     }
   }
   // error if not found
-  prints("nf \n");
   error();
 }
 
 main() {
-  INODE root_ino;
-  prints("main start\n");
+  INODE *inode_p;
+  GD *gd_p;
+  u16 iblk, ino, i;
+  u32 *bp;
+  char *name[2];
+  name[0] = "boot", name[1] = "mtx";
+  // read group descriptor
   getblk(2, buf1);
-  inode_table = ((GD*)buf1)->bg_inode_table;
-  root_ino = *(get_inode(2));
-  prints("got root ino\n");
-  // 1. Write YOUR C code to get the INODE of / boot / mtx INODE *ip-- > INODE
-  i = search(&root_ino, "boot");
-  prints("found boot\n");
-  j = search(i, "mtximage");
-  prints("found mtximage\n");
-  // if INODE has indirect blocks
-  // : get i_block[12] int buf2[]
-
-  // 2. setes(0x1000); // MTX loading segment = 0x1000
-
-  // 3. load 12 DIRECT blocks of INODE into memory beginning at segment 0x1000
-
-  // 4. load INDIRECT blocks,
-  // if any,
-  // into memory
-
-  // prints("go?");
-  getc();
+  gd_p = (GD *)buf1;
+  // get inode start block from gd
+  iblk = (u16)gd_p->bg_inode_table;
+  // get inode of root
+  getblk(iblk, buf1);
+  inode_p = (INODE *)buf1 + 1;
+  // search boot then mtx
+  for (i = 0; i < 2; i++) {
+    ino = search(inode_p, name[i]) - 1;
+    getblk(iblk + (ino / 8), buf1);
+    inode_p = (INODE *)buf1 + (ino % 8);
+  }
+  // read indirect block of mtx into buf2
+  getblk((u16)inode_p->i_block[12], buf2);
+  // set bios base address
+  setes(0x1000);
+  // copy direct blocks
+  for (i = 0; i < 12; i++) {
+    getblk((u16)inode_p->i_block[i], 0);
+    inces(), putc('A');
+  }
+  // copy indirect blocks
+  bp = (u32 *)buf2;
+  while (*bp) {
+    getblk((u16)*bp++, 0);
+    inces(), putc('H');
+  }
+  prints("!!!\r\n?"), getc();
 }
