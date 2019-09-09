@@ -15,11 +15,6 @@ typedef struct ext2_group_desc GD;
 typedef struct ext2_inode INODE;
 typedef struct ext2_dir_entry_2 DIR;
 
-int prints(char *s) {
-  while (*s) 
-    putc(*s++);
-}
-
 // int gets(char *s) {
 //   while (*s = getc() != '\r')
 //     putc(*s++);
@@ -27,8 +22,19 @@ int prints(char *s) {
 //   putc('\r'), putc('\n');
 // }
 
+// u8 streq(char *s1, char *s2) {
+//   while (*s1 && *s2 && *s1 == *s2)
+//     s1++, s2++;
+//   return *s1 == *s2;
+// }
+
+int prints(char *s) {
+  while (*s)
+    putc(*s++);
+}
+
 // don't know what this is for
-u16 NSEC = 2; 
+u16 NSEC = 2;
 // Block buffers
 char buf1[BLK], buf2[BLK];
 
@@ -36,12 +42,6 @@ int getblk(u16 blk, char *buf) {
   readfd((2 * blk) / CYL, ((2 * blk) % CYL) / TRK, ((2 * blk) % CYL) % TRK,
          buf);
 }
-
-// u8 streq(char *s1, char *s2) {
-//   while (*s1 && *s2 && *s1 == *s2)
-//     s1++, s2++;
-//   return *s1 == *s2;
-// }
 
 u16 search(INODE *ip, char *name) {
   char c, i;
@@ -54,12 +54,13 @@ u16 search(INODE *ip, char *name) {
     // read block into buf2
     getblk((u16)ip->i_block[i], buf2);
     dp = (DIR *)buf2;
-    // for each dir to end of block
+    // for each dir in block
     while ((char *)dp < buf2 + BLK) {
       // null terminate dp->name
       c = dp->name[dp->name_len];
       dp->name[dp->name_len] = '\0';
       prints(dp->name), putc(' ');
+      // return if match
       if (!strcmp(name, dp->name)) {
         dp->name[dp->name_len] = c;
         prints("\r\n");
@@ -67,7 +68,7 @@ u16 search(INODE *ip, char *name) {
       }
       // restore overwritten char
       dp->name[dp->name_len] = c;
-      // go to next dir
+      // move to next dir
       dp = (char *)dp + dp->rec_len;
     }
   }
@@ -83,20 +84,20 @@ main() {
   char *name[2];
   name[0] = "boot", name[1] = "mtx";
   // read group descriptor
-  getblk(2, buf1);
+  getblk(NSEC, buf1);
   gd_p = (GD *)buf1;
   // get inode start block from gd
   iblk = (u16)gd_p->bg_inode_table;
   // get inode of root
   getblk(iblk, buf1);
   inode_p = (INODE *)buf1 + 1;
-  // search boot then mtx
+  // search "boot" then "mtx"
   for (i = 0; i < 2; i++) {
     ino = search(inode_p, name[i]) - 1;
     getblk(iblk + (ino / 8), buf1);
     inode_p = (INODE *)buf1 + (ino % 8);
   }
-  // read indirect block of mtx into buf2
+  // read indirect block of "mtx" into buf2
   getblk((u16)inode_p->i_block[12], buf2);
   // set bios base address
   setes(0x1000);

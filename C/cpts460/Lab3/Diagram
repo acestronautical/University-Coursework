@@ -1,0 +1,7 @@
+Keyevent -> VIC2 -> IRQ31 -> VIC1
+State: Scancode in kbd data register and an interrupt fires
+Interrupt -> Jump to IRQ vector -> Jump to interrupt handler
+State: CPU is in IRQ mode using IRQ stack and executing handler
+Handler -> determine interrupt source/type -> call appropriate handler
+State: CPU is executing kbd handler
+KBDHandler -> read kbd data and clear interrupt -> return char and exit IRQ mode
