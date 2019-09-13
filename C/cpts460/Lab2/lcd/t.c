@@ -16,9 +16,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "defines.h"
 #include "vid.c"
+#include "uart.c"
 
 int color;
-char *tab = "0123456789ABCDEF";
 
 /******** in uart.c file *******
 typedef struct uart{
