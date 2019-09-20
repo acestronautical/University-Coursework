@@ -1,0 +1,57 @@
+      
+CPTS 460 LAB #3
+DUE: 9-20-2019
+
+1. Improved KBD driver:
+
+Download samples/LAB3/kbd.c file
+         It is for scan code set 1.
+(1). It shows how to recognize SHIFT and CONTROL keys.
+(2). It can handle both lowercase and uppercase keys.
+(3). It should be able to recognize Control-C and Control-D keys.
+(4). Caps Lock key
+
+============================= DO these =======================
+If YOUR Ubuntu uses scan code set 1: complete (3) and (4).
+
+If YOUR Ubuntu uses scan code set 2: 
+        Left shift   scan code = 0x12
+        Left control scan code = 0x14
+   Modify kbd.c to work for (1) to (4)
+=================================================================
+
+2. Download samples/LAB3/lab3Part2.tgz
+      zcat lab3Part2.tgz | tar xvf -
+
+Run mk to RUN it.
+
+It's the initial version of the WANIX kernel for ARM.
+
+===================== DO these ============================
+(1). Write YOUR own
+  enqueue(PROC **queue, PROC *p), which enters p into queue by priority
+
+  PROC *dequeue(PROC **queue), which removes and return the first PROC in queue
+
+  printList(char *name, PROC *list), which prints a list or queue
+
+Use YOUR queue.c file in t.c (replace queue.obj during linking)
+
+(2). Write your own kbd.c to replace kbd.obj during linking.
+
+(3). In the posted kernel.c code, the process body function is defined as
+        int body()
+        {
+           printf("proc %d resume to body()\n", running->pid);
+            ..............
+        }
+
+     Modify it to
+
+	int body(char *myname, int myage)
+        {
+           printf("proc %d: myname=%s myage=%d\n", running->pid, myname, myage);
+	   ........
+	}
+		     
+ ===============================================================
