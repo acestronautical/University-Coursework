@@ -53,8 +53,6 @@ void kbd_handler() {
       shift = 0; // released the shift key
     else if (code == LCTRL)
       control = 0; // released the Control key
-    else if (code == CAPSLOCK)
-      capslock = 0; // released the Control key
     return;
   }
 
