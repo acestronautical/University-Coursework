@@ -1,3 +1,5 @@
+#include "type.h"
+
 int ksleep(int event) {
   int sr = int_off();
   printf("proc %d going to sleep on event=%x\n", running->pid, event);
