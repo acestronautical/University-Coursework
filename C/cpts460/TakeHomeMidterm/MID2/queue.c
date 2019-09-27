@@ -1,54 +1,37 @@
 #include "type.h"
 
-void enqueue(PROC **queue, PROC *p) {
-  PROC *q = *queue;
-  if (q == 0) {
+int enqueue(PROC **queue, PROC *p)
+{
+  PROC *q  = *queue;
+  if (q==0 || p->priority > q->priority){
     *queue = p;
-    p->next = 0;
+    p->next = q;
     return;
   }
-  if ((*queue)->priority < p->priority) {
-    p->next = *queue;
-    *queue = p;
-    return;
-  }
-  while (q->next && p->priority <= q->next->priority) {
+  while (q->next && p->priority <= q->next->priority){
     q = q->next;
   }
   p->next = q->next;
   q->next = p;
+  return 0;
 }
 
-PROC *dequeue(PROC **queue) {
+PROC *dequeue(PROC **queue)
+{
   PROC *p = *queue;
   if (p)
     *queue = p->next;
   return p;
 }
 
-int printQ(PROC *p) {
-  kprintf("readyQueue = ");
-  while (p) {
-    kprintf("[%d%d]->", p->pid, p->priority);
+int printList(char *name, PROC *list)
+{
+  printf("%s=", name);
+  PROC *p = list;
+  while(p){
+    printf("[%d%d]->", p->pid, p->priority);
     p = p->next;
   }
-  kprintf("NULL\n");
-}
-
-int printSleepList(PROC *p) {
-  printf("sleepList   = ");
-  while (p) {
-    kprintf("[%devent=%d]->", p->pid, p->event);
-    p = p->next;
-  }
-  kprintf("NULL\n");
-}
-
-int printList(char *name, PROC *p) {
-  kprintf("%s = ", name);
-  while (p) {
-    kprintf("[%d%d]->", p->pid, p->priority);
-    p = p->next;
-  }
-  kprintf("NULL\n");
+  printf("NULL\n");
+  return 0;
 }

@@ -1,19 +1,4 @@
-/********************************************************************
-Copyright 2010-2017 K.C. Wang, <kwang@eecs.wsu.edu>
-This program is free software: you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation, either version 3 of the License, or
-(at your option) any later version.
-
-This program is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
-
-You should have received a copy of the GNU General Public License
-along with this program.  If not, see <http://www.gnu.org/licenses/>.
-********************************************************************/
-
+// defines.h file
 #pragma once
 
 typedef unsigned char  u8;
@@ -57,23 +42,18 @@ typedef unsigned int   u32;
 #define PURPLE 5
 #define WHITE  6
 
-#define NPROC    9          // number of PROCs
-#define SSIZE 1024          // stack size = 4KB
+#define  SSIZE 1024
 
-// PROC status
-#define FREE     0          
-#define READY    1
-#define SLEEP    2
-#define ZOMBIE   3
-
-#define READER 0
-#define WRITER 1
-#define NOPIPE 2
+#define  FREE   0
+#define  READY  1
+#define  SLEEP  2
+#define  BLOCK  3
+#define  ZOMBIE 4
+#define  printf  kprintf
 
 typedef struct proc{
     struct proc *next;      // next proc pointer       
     int  *ksp;              // saved sp: at byte offset 4 
-
     int   pid;              // process ID
     int   ppid;             // parent process pid 
     int   status;           // PROC status=FREE|READY, etc. 
@@ -84,19 +64,20 @@ typedef struct proc{
 
     struct proc *child;     // first child PROC pointer       
     struct proc *sibling;   // sibling PROC pointer  
-    struct proc *parent;    // parent PROC pointer
-	int pipe_flag;       
+    struct proc *parent;    // parent PROC pointer       
 
-    int   kstack[1024];     // process stack                    
+    int   kstack[1024];     // process stack                 
 }PROC;
 
+
+// assembly/lib functions
 
 void lock(void);
 void unlock(void);
 void int_on(int);
 int int_off(void);
 int kgets(char s[]);
-void kputc(char c);
+int kputc(char c);
 
 // uart.c globals
 
@@ -141,10 +122,11 @@ int procsize = sizeof(PROC);
 #define printf kprintf
 #define gets kgets
 
-//
-void enqueue(PROC **queue, PROC *p);
+// queue.c
+
+int enqueue(PROC **queue, PROC *p);
 PROC *dequeue(PROC **queue);
-int printQ(PROC *p);
+int printList(char *name, PROC *list);
 
 //
 int uprintf(char *fmt, ...);

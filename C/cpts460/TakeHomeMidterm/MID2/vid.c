@@ -1,3 +1,18 @@
+// vid.c file: implement fbuf for the ARM PL110 LCD display
+/**************** Reference: ARM PL110 and DUI02241 ********************
+Color LCD base address: 0x10120000 - 0x1012FFFF
+00    timing0
+04    timing1
+08    timing2
+0C    timing3
+10    upperPanelframeBaseAddressRegister // use only ONE panel
+14    lowerPanelFrameBaseAddressRegister // some display allows 2 panels
+18    interruptMaskClrregister
+1C    controlRegister
+20    interruptStatusReg
+etc
+************************************************************************/
+#include "type.h"
 #include "font0"
 
 int fbuf_init()
@@ -44,12 +59,12 @@ int fbuf_init()
   /*********
   for (x=0; x<640*480; x++)
     fb[x] = 0x00000000;    // clean screen; all pixels are BLACK
-  cursor = 127; // cursor bit map in font0 at 128
+  cursor = 128; // cursor bit map in font0 at 128
   *********/
   // for 640x480 VGA mode display
   for (x=0; x<640*480; x++)
     fb[x] = 0x00000000;    // clean screen; all pixels are BLACK
-  cursor = 127; // cursor bit map in font0 at 128
+  cursor = 128; // cursor bit map in font0 at 128
 }
 
 int clrpix(int x, int y)
@@ -139,14 +154,14 @@ int putcursor()
   kpchar(cursor, row, col);
 }
 
-void kputc(char c)
+int kputc(char c)
 {
   clrcursor();
   if (c=='\r'){
     col=0;
     //printf("row=%d col=%d\n", row, col);
     putcursor();
-    return;
+    return 0;
   }
   if (c=='\n'){
     row++;
@@ -156,7 +171,7 @@ void kputc(char c)
     }
     //printf("row=%d col=%d\n", row, col);
     putcursor();
-    return;
+    return 0;
   }
   if (c=='\b'){
     if (col>0){
@@ -164,7 +179,7 @@ void kputc(char c)
       col--;
       putcursor();
     }
-    return;
+    return 0;
   }
   // c is ordinary char
   kpchar(c, row, col);
@@ -221,8 +236,10 @@ int krpu(int x)
 
 int kprintu(int x)
 {
-  if (x==0)
+  if (x==0){
+    kputc(' ');
     kputc('0');
+  }
   else
     krpu(x);
   kputc(' ');
@@ -262,14 +279,4 @@ int kprintf(char *fmt,...)
     }
     cp++; ip++;
   }
-}
-
-int stestring(char *s)
-{
-  char c;
-  while((c=kgetc()) != '\r'){
-    *s = c;
-    s++;
-  }
-  *s = 0;
 }

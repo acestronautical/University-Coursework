@@ -1,35 +1,7 @@
 #include "string.c"
 #include "type.h"
 
-int pipe_writer() // pipe writer task code
-{
-  struct uart *up = &uart[0];
-  char line[128];
-  while (1) {
-    uprintf("Enter a line for task1 to get : ");
-    printf("task%d waits for line from UART0\n", running->pid);
-    ugets(up, line);
-    uprints(up, "\r\n");
-    printf("task%d writes line=[%s] to pipe\n", running->pid, line);
-    write_pipe(kpipe, line, strlen(line));
-  }
-}
 
-int pipe_reader() // pipe reader task code
-{
-  char line[128];
-  int i, n;
-  while (1) {
-    printf("task%d reading from pipe\n", running->pid);
-    n = read_pipe(kpipe, line, 20);
-    printf("task%d read n=%d bytes from pipe : [", running->pid, n);
-    for (i = 0; i < n; i++)
-      kputc(line[i]);
-    printf("]\n");
-  }
-}
-
-/*---------- Algorithm of pipe_read-------------*/
 int read_pipe(PIPE *p, char *buf, int n) {
   int r = 0;
   if (n <= 0)
@@ -55,7 +27,6 @@ int read_pipe(PIPE *p, char *buf, int n) {
   }
 }
 
-/*---------- Algorithm of write_pipe -----------*/
 int write_pipe(PIPE *p, char *buf, int n) {
   int r = 0;
   if (n <= 0)
@@ -76,5 +47,34 @@ int write_pipe(PIPE *p, char *buf, int n) {
     // if (n == 0)
       // return r;
     ksleep(2);
+  }
+}
+
+
+int pipe_writer() // pipe writer task code
+{
+  struct uart *up = &uart[0];
+  char line[128];
+  while (1) {
+    uprintf("Enter a line for task1 to get : ");
+    printf("task%d waits for line from UART0\n", running->pid);
+    ugets(up, line);
+    uprints(up, "\r\n");
+    printf("task%d writes line=[%s] to pipe\n", running->pid, line);
+    write_pipe(kpipe, line, strlen(line));
+  }
+}
+
+int pipe_reader() // pipe reader task code
+{
+  char line[128];
+  int i, n;
+  while (1) {
+    printf("task%d reading from pipe\n", running->pid);
+    n = read_pipe(kpipe, line, 20);
+    printf("task%d read n=%d bytes from pipe : [", running->pid, n);
+    for (i = 0; i < n; i++)
+      kputc(line[i]);
+    printf("]\n");
   }
 }
