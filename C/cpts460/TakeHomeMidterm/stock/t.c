@@ -7,6 +7,7 @@ int color;
 #include "vid.c"
 #include "exceptions.c"
 #include "kernel.c"
+#include "wait.c"
 
 void copy_vectors(void) {
     extern u32 vectors_start;

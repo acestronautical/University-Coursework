@@ -1,5 +1,8 @@
-#include "type.h"
-#include "wait.c"
+#define NPROC 9
+PROC proc[NPROC], *running, *freeList, *readyQueue, *sleepList;
+int procsize = sizeof(PROC);
+
+int body();
 
 int init()
 {
@@ -31,21 +34,22 @@ int init()
   kprintf("running = %d\n", running->pid);
 }
 
-int insertChild(PROC *p)
+int enter_child(PROC *p)
 {
-  // insert into tree
-  PROC *cur;
-  if (!running->child)
-    running->child = p;
-  else {
-    cur = running->child;
-    while (cur->sibling)
-      cur = cur->sibling;
-    cur->sibling = p;
-  }
+  // enter p into child list of parent
 }
 
 char *status[ ] = {"FREE", "READY", "SLEEP", "BLOCK", "ZOMABIE"};  
+
+int printChild()
+{
+  // print child list of running PROC
+}
+
+int delete_child(PROC *p)
+{
+  // delete child p from running's childList
+}
   
 PROC *kfork(int func, int priority)
 {
@@ -63,7 +67,7 @@ PROC *kfork(int func, int priority)
   p->child = 0;
   p->sibling = 0;
 
-  insertChild(p);
+  enter_child(p);
   
   // set kstack to resume to body
   // stack = r0,r1,r2,r3,r4,r5,r6,r7,r8,r9,r10,r11,r12,r14
@@ -116,23 +120,6 @@ int do_wait()
 	 running->pid, pid, status);
 }
 
-
-void printChild(char *name, PROC *p) {
-  PROC *children[16];
-  int i = 0;
-  printf("%s = ", name);
-  while (p) {
-    printf("[%d %d]->", p->pid, p->priority);
-    if (p->child)
-      children[i++] = p->child;
-    p = p->sibling;
-  }
-  children[i++] = 0;
-  printf("\n");
-  for (i = 0; children[i]; i++)
-    printChild("             ", children[i]);
-}
-
 int body()
 {
   char command[64];
@@ -153,8 +140,8 @@ int body()
     if (pid==8) color=WHITE;
 
     kprintf("proc %d running : ", running->pid);
+    printChild();
 
-    printChild("childList ", running->child);
     printList("freeList  ", freeList);
     printList("readyQueue", readyQueue);
     

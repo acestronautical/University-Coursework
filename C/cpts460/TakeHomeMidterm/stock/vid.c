@@ -12,8 +12,13 @@ Color LCD base address: 0x10120000 - 0x1012FFFF
 20    interruptStatusReg
 etc
 ************************************************************************/
-#include "type.h"
 #include "font0"
+char *tab = "0123456789ABCDEF";
+u8 cursor;
+int volatile *fb;
+u8 *font;
+int row, col;
+int color;
 
 int fbuf_init()
 {
@@ -161,7 +166,7 @@ int kputc(char c)
     col=0;
     //printf("row=%d col=%d\n", row, col);
     putcursor();
-    return 0;
+    return;
   }
   if (c=='\n'){
     row++;
@@ -171,7 +176,7 @@ int kputc(char c)
     }
     //printf("row=%d col=%d\n", row, col);
     putcursor();
-    return 0;
+    return;
   }
   if (c=='\b'){
     if (col>0){
@@ -179,7 +184,7 @@ int kputc(char c)
       col--;
       putcursor();
     }
-    return 0;
+    return;
   }
   // c is ordinary char
   kpchar(c, row, col);
