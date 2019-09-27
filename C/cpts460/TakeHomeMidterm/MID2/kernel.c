@@ -36,7 +36,6 @@ char *status[] = {"FREE", "READY", "SLEEP", "BLOCK", "ZOMBIE"};
 int ksleep(int event) {
   int sr = int_off();
 
-  printf("proc %d going to sleep on event=%x\n", running->pid, event);
   running->event = event;
   running->status = SLEEP;
   enqueue(&sleepList, running);
@@ -47,13 +46,13 @@ int ksleep(int event) {
 }
 
 int kwakeup(int event) {
-  int sr = int_off();
-
   PROC *temp, *p;
   temp = 0;
-  printList("sleepList", sleepList);
-  p = dequeue(&sleepList);
-  while (p) {
+  int sr = int_off();
+
+  // printList("sleepList", sleepList);
+
+  while (p = dequeue(&sleepList)) {
     if (p->event == event) {
       printf("wakeup %d\n", p->pid);
       p->status = READY;
@@ -61,11 +60,9 @@ int kwakeup(int event) {
     } else {
       enqueue(&temp, p);
     }
-    p = dequeue(&sleepList);
   }
   sleepList = temp;
-  printList("sleepList", sleepList);
-
+  // printList("sleepList", sleepList);
   int_on(sr);
 }
 
@@ -155,21 +152,21 @@ PROC *kfork(int func, int priority) {
   p->status = READY;
   p->priority = priority;
   p->ppid = running->pid;
-
   p->parent = running;
   p->child = 0;
-  p->sibling = 0;
+  p->sibling = running->child;
+  running->child = p;
 
   // insert into tree
-  PROC *cur;
-  if (!running->child)
-    running->child = p;
-  else {
-    cur = running->child;
-    while (cur->sibling)
-      cur = cur->sibling;
-    cur->sibling = p;
-  }
+  // PROC *cur;
+  // if (!running->child)
+  //   running->child = p;
+  // else {
+  //   cur = running->child;
+  //   while (cur->sibling)
+  //     cur = cur->sibling;
+  //   cur->sibling = p;
+  // }
 
   // set kstack to resume to body
   // stack = r0,r1,r2,r3,r4,r5,r6,r7,r8,r9,r10,r11,r12,r14

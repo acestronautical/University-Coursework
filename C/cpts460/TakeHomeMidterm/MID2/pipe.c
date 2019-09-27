@@ -46,11 +46,11 @@ int read_pipe(PIPE *p, char *buf, int n) {
       if (n == 0)
         break;
     }
-    kwakeup(&p->room); // wakeup writers
-    if (r)            // if has read some data
+    kwakeup(2); // wakeup writers
+    if (r)             // if has read some data
       return r;
     // pipe has no data
-    ksleep(&p->data);
+    ksleep(1);
     // sleep for data
   }
 }
@@ -60,8 +60,8 @@ int write_pipe(PIPE *p, char *buf, int n) {
   int r = 0;
   if (n <= 0)
     return 0;
-  // validate PIPE pointer p; // p->status must not be FREE
   while (n) {
+    printf("writer %d writing pipe\n", running->pid);
     while (p->room) {
       p->buf[p->head++] = *buf++; // write a byte to pipe;
       p->head %= PSIZE;
@@ -72,14 +72,9 @@ int write_pipe(PIPE *p, char *buf, int n) {
       if (n == 0)
         break;
     }
-    kwakeup(&p->data);
-    // wakeup readers, if any.
-    if (n == 0)
-      return r;
-    // finished writing n bytes
-    // still has data to write but pipe has no room5.13
-    ksleep(&p->room);
-    // sleep for room
+    kwakeup(1);
+    // if (n == 0)
+      // return r;
+    ksleep(2);
   }
 }
-

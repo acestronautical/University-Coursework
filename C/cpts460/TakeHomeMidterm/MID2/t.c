@@ -38,14 +38,18 @@ int main() {
   uart_init();
   kbd_init();
   // pipe_init();
+  int i;
+  kpipe = &pipe;
+  kpipe->head = kpipe->tail = 0;
+  kpipe->data = 0; kpipe->room = PSIZE;
   // initialize PIPEs
   kpipe = &pipe; // create global kpipe
   init();                // kernel init
   kprintf("P0 kfork tasks\n");
   kfork((int)pipe_writer, 1); // pipe writer process
   kfork((int)pipe_reader, 1); // pipe reader process
+  printf("forked pipes\n");
   while (1) {
-    if (readyQueue)
       tswitch();
   }
 }

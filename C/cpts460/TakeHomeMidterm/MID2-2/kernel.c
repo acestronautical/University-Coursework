@@ -1,4 +1,5 @@
 #define NPROC 9
+
 PROC proc[NPROC], *running, *freeList, *readyQueue, *sleepList;
 int procsize = sizeof(PROC);
 
