@@ -134,7 +134,7 @@ int uprintf(char *fmt, ...);
 // pipe stuff
 
 #define NPIPE 2
-#define PSIZE 16
+#define PSIZE 4
 
 typedef struct pipe{
   char buf[PSIZE];

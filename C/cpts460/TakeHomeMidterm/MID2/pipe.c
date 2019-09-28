@@ -18,11 +18,11 @@ int read_pipe(PIPE *p, char *buf, int n) {
       if (n == 0)
         break;
     }
-    kwakeup(2); // wakeup writers
+    kwakeup(&p->room); // wakeup writers
     if (r)             // if has read some data
       return r;
     // pipe has no data
-    ksleep(1);
+    ksleep(&p->data);
     // sleep for data
   }
 }
@@ -43,10 +43,10 @@ int write_pipe(PIPE *p, char *buf, int n) {
       if (n == 0)
         break;
     }
-    kwakeup(1);
-    // if (n == 0)
-      // return r;
-    ksleep(2);
+    kwakeup(&p->data);
+    if (n == 0)
+      return r;
+    ksleep(&p->room);
   }
 }
 
