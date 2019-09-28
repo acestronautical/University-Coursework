@@ -39,11 +39,10 @@ int main() {
   kbd_init();
   // pipe_init();
   int i;
+  // initialize PIPEs
   kpipe = &pipe;
   kpipe->head = kpipe->tail = 0;
   kpipe->data = 0; kpipe->room = PSIZE;
-  // initialize PIPEs
-  kpipe = &pipe; // create global kpipe
   init();                // kernel init
   kprintf("P0 kfork tasks\n");
   kfork((int)pipe_writer, 1); // pipe writer process
