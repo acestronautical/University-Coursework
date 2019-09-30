@@ -19,9 +19,9 @@ int kwakeup(int event) {
 
   while (p = dequeue(&sleepList)) {
     if (p->event == event) {
+      printf("waking up p%d\n", p->pid);
       p->status = READY;
       enqueue(&readyQueue, p);
-      printf("\nwakeup p%d\n", p->pid);
     } else {
       enqueue(&temp, p);
     }
