@@ -87,9 +87,12 @@ int body() {
     pid = running->pid;
     kprintf("\nproc %d resume to body()\n", running->pid);
     kprintf("proc %d running : ", pid);
-    printf("enter amount of time to sleep for: ");
-    kgets(tstring);
-    tval = atoi(tstring);
+    tval = 0;
+    while (tval < 1 || tval > 10) {
+      printf("\nenter amount of time to sleep for: ");
+      kgets(tstring);
+      tval = atoi(tstring);
+    }
     printf("got wait time: %d\n", tval);
     insert_TQE(tval);
     ksleep(pid);

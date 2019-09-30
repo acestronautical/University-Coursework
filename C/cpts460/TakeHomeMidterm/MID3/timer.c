@@ -1,3 +1,5 @@
+#include "type.h"
+
 // timer register u32 offsets from base address
 #define TLOAD 0x0
 #define TVALUE 0x1
