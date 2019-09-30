@@ -84,7 +84,6 @@ void timer_handler(int n) {
       int pid = tqe[curTQE].pid;
       curTQE = (curTQE + 1) % NPROC;
       kwakeup(pid);
-      ksleep(running->pid);
     } else {
       tqe[curTQE].time--;
     }

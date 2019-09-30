@@ -40,6 +40,5 @@ int insert_TQE(int tval) {
   printf("entered pid %d to tqe with time %d \n", tqe[i % NPROC].pid,
          tqe[i % NPROC].time);
 
-  printf("head tq time %d, pid %d\n", tqe[curTQE].time, tqe[curTQE].pid);
   int_on(sr);
 }
