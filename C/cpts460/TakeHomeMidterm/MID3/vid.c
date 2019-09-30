@@ -15,6 +15,7 @@ etc
 #include "type.h"
 #include "font0"
 
+
 int fbuf_init()
 {
   int x; int i;
@@ -154,14 +155,14 @@ int putcursor()
   kpchar(cursor, row, col);
 }
 
-int kputc(char c)
+void kputc(char c)
 {
   clrcursor();
   if (c=='\r'){
     col=0;
     //printf("row=%d col=%d\n", row, col);
     putcursor();
-    return 0;
+    return;
   }
   if (c=='\n'){
     row++;
@@ -171,7 +172,7 @@ int kputc(char c)
     }
     //printf("row=%d col=%d\n", row, col);
     putcursor();
-    return 0;
+    return;
   }
   if (c=='\b'){
     if (col>0){
@@ -179,7 +180,7 @@ int kputc(char c)
       col--;
       putcursor();
     }
-    return 0;
+    return;
   }
   // c is ordinary char
   kpchar(c, row, col);
@@ -265,7 +266,7 @@ int kprintf(char *fmt,...)
     if (*cp != '%'){
       kputc(*cp);
       if (*cp=='\n')
-	kputc('\r');
+	      kputc('\r');
       cp++;
       continue;
     }

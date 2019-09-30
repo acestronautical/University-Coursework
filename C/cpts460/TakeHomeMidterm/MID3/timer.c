@@ -1,5 +1,3 @@
-#include "type.h"
-
 // timer register u32 offsets from base address
 #define TLOAD 0x0
 #define TVALUE 0x1
@@ -40,28 +38,16 @@ void timer_init() {
     *(tp->base + TLOAD) = 0x100;
     // CntlReg=011-0010=|En|Pe|IntE|-|scal=01|32bit|0=wrap|=0x66
     *(tp->base + TCNTL) = 0x66;
-    *(tp->base + TBGLOAD) = 0x1C0;           // timer counter value
+    *(tp->base + TBGLOAD) = 0x1D0;           // timer counter value
     tp->tick = tp->hh = tp->mm = tp->ss = 0; // initialize wall clock
+    stringcpy((char *)tp->clock, "00:00:00");
   }
-}
-
-int timer_clearInterrupt(int n) // timer_start(0), 1, etc.
-{
-  TIMER *tp = &timer[n];
-  *(tp->base + TINTCLR) = 0xFFFFFFFF;
-}
-
-void timer_stop(int n) {
-  // stop a timer
-  TIMER *tp = &timer[n];
-  *(tp->base + TCNTL) &= 0x7F; // clear enable bit 7
 }
 
 void timer_handler(int n) {
   int i;
   TIMER *t = &timer[n];
   t->tick++;
-  // Assume 120 ticks per second
   if (t->tick == 120) {
     t->tick = 0;
     t->ss++;
@@ -80,7 +66,28 @@ void timer_handler(int n) {
     t->clock[1] = '0' + (t->hh % 10);
     t->clock[0] = '0' + (t->hh / 10);
   }
-  kputc('*');
+
+  if (n == 0) {
+    for (i = 0; i < 8; i++) {
+      kpchar(t->clock[i], n, 72 + i); // to line n of LCD
+    }
+  } else if (n == 1) {
+    for (i = 0; i < NPROC; i++)
+      kpchar(tqe[i].time, 0, i);
+    for (; i < 70; i++)
+      kpchar('\0', 0, i);
+  }
+  if (t->tick == 0) {
+    if (tqe[curTQE].time == 0) {
+      int pid = tqe[curTQE].pid;
+      curTQE = (curTQE + 1) % NPROC;
+      kwakeup(pid);
+      ksleep(running->pid);
+    } else {
+      tqe[curTQE].time--;
+    }
+  }
+  color = 1;               // display in different color
   timer_clearInterrupt(n); // clear timer interrupt
 }
 
@@ -90,4 +97,16 @@ void timer_start(int n) // timer_start(0), 1, etc.
   kprintf("timer_start %d base=%x\n", n, tp->base);
   *(tp->base + TCNTL) |= 0x80;
   // set enable bit 7
+}
+
+int timer_clearInterrupt(int n) // timer_start(0), 1, etc.
+{
+  TIMER *tp = &timer[n];
+  *(tp->base + TINTCLR) = 0xFFFFFFFF;
+}
+
+void timer_stop(int n) {
+  // stop a timer
+  TIMER *tp = &timer[n];
+  *(tp->base + TCNTL) &= 0x7F; // clear enable bit 7
 }

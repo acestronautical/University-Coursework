@@ -43,6 +43,7 @@ typedef unsigned int u32;
 #define WHITE 6
 
 #define SSIZE 1024
+#define PSIZE 9
 
 #define FREE 0
 #define READY 1
@@ -69,68 +70,25 @@ typedef struct proc {
   int kstack[1024]; // process stack
 } PROC;
 
-// assembly/lib functions
-
-void lock(void);
-void unlock(void);
-void int_on(int);
-int int_off(void);
-int kgets(char s[]);
-int kputc(char c);
-
-// kbd
-int kbd_handler();
-int kbd_init();
-
-// uart.c globals
-
-#define UDR 0x00
-#define UFR 0x18
-
-#define RXFE 0x10
-#define TXFF 0x20
-
-typedef struct uart {
-  char *base;
-  int n;
-} UART;
-
-UART uart[4];
+// vid
 char *tab = "0123456789ABCDEF";
-
-// vid.c globals
-
-// char *tab = "0123456789ABCDEF";
 u8 cursor;
 int volatile *fb;
 u8 *font;
 int row, col;
 int color;
 
-//
-int body();
-int tswitch();
-int do_exit();
-
+// kernel
 #define NPROC 9
-
-PROC proc[NPROC]; // NPROC PROCs
-PROC *freeList;   // freeList of PROCs
-PROC *readyQueue; // priority queue of READY procs
-PROC *running;    // current running proc pointer
-PROC *sleepList;
-
+#define SCREEN_WIDTH 70
+PROC proc[NPROC], *running, *freeList, *readyQueue, *sleepList;
 int procsize = sizeof(PROC);
 
-#define printf kprintf
-#define gets kgets
+// tqe
+typedef struct tq {
+  int time; // requested time
+  int pid;  // PROC ID
+} TQE;
 
-// queue.c
-
-int enqueue(PROC **queue, PROC *p);
-PROC *dequeue(PROC **queue);
-int printList(char *name, PROC *list);
-
-//
-int uprintf(char *fmt, ...);
-
+TQE tqe[NPROC];
+int curTQE = 0;
