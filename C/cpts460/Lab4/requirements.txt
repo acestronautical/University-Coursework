@@ -1,0 +1,38 @@
+            CS460 LAB Assignment #4
+         
+             DUE and DEMO: 10/11/2019
+
+1. Download samples/LAB4/lab4pre.tgz
+
+2. zcat lab4pre.tgz | tar xvf -
+
+3. mk
+
+4. Modify YOUR booter of LAB1 as a loader:
+	    int load("filename", PROC *p)
+	    {
+	      filename in /bin directory
+	      load to p->pgdir[2048] & 0xFFF0000
+	      return 1 for success
+	    }
+================== Requirements ==============
+
+Implement the following UMODE commands:
+
+1. kfork:
+   ask for a filename, e.g. u2 ==>
+   syscall to kernel to kfork() a child process with Umode image=filename;
+return child pid;
+
+2. exit:
+   ask for an exit value, e.g. 123 ==>
+   syscall to kexit(int exitCode) in kernel to DIE;
+
+3. wait:
+   int pid, status;
+   pid = wait(&status);  ==>
+   syscall to kwait() in kernel to wait for a ZOMBIE child;
+   print child pid and status
+   
+4. Sample solution: samples/LAB4/lab4.bin
+=============================================
