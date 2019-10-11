@@ -25,56 +25,34 @@ int kwakeup(int event) {
   int_on(sr);
 }
 
-int becomeOrphan(PROC *p) {
-  PROC *p1 = proc + 1, *child = p->child;
-
-  while (child) {
-    child->parent = p1;
-    child->ppid = 1;
-    p->child = child->sibling;
-    child->sibling = p1->child;
-    p1->child = child;
-    child = p->child;
-  }
-}
-
 int kexit(int exitValue) {
   printf("proc %d in kexit(), value=%d\n", running->pid, exitValue);
+  if (running->pid == 1)
+    return printf("kexit P1 failed: permission denied\n");
   running->exitCode = exitValue;
   running->status = ZOMBIE;
-  becomeOrphan(running);
-  tswitch();
-}
-
-void justKillYourself(PROC *p) {
-  PROC *prev;
-
-  if (p->parent->child == p) {
-    p->parent->child = p->sibling;
-  } else {
-    for (prev = p->parent->child; prev->sibling != p; prev = prev->sibling)
-      ;
-    prev->sibling = p->sibling;
+  for (int i = 0; i < NPROC; i++) {
+    if (proc[i].ppid == running->pid) {
+      proc[i].parent = &proc[1];
+      proc[i].ppid = 1;
+    }
   }
-  p->parent = p->sibling = p->child = 0;
-  p->ppid = 0;
-  p->status = FREE;
+  tswitch();
 }
 
 int kwait(int *status) {
   PROC *p;
-  if (!running->child)
-    return -1;
-  while (1) {
-    for (p = running->child; p; p = p->sibling)
-      if (p->status == ZOMBIE)
-        break;
-    if (p) {
-      *status = p->exitCode;
-      enqueue(&freeList, p);
-      justKillYourself(p);
-      return p->pid;
-    }
-    ksleep((int)running);
+  for (int i = 0; i < NPROC; i++) {
+    if (proc[i].ppid == running->pid && proc[i].status == ZOMBIE)
+      p = &proc[i];
   }
+  if (p) {
+    *status = p->exitCode;
+    enqueue(&freeList, p);
+    p->parent = 0;
+    p->ppid = 0;
+    p->status = FREE;
+    return p->pid;
+  }
+  ksleep((int)running);
 }

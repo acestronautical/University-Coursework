@@ -136,7 +136,6 @@ int main()
    kernel_init();
 
    kfork("u1");
-   kfork("u2");
    
    color = CYAN;
    kprintf("P0 switch to P1, enter a key : ");

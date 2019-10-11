@@ -21,8 +21,7 @@ int main() {
   ppid = getppid();
 
   while (1) {
-    printf("This is process %d in Umode at %x  parent=%d\n", pid, getPA(),
-           ppid);
+    printf("P%d with U2 at PA=%x  PARENT=%d\n", pid, getPA(), ppid);
     umenu();
     printf("input a command : ");
     ugetline(line);

@@ -35,13 +35,14 @@ int uchname() {
 int uswitch() { return syscall(4, 0, 0, 0); }
 
 int ukfork() {
-  char s[32];
-  uprintf("input a filename [u1 or u2]: ");
-  ugetline(s);
-  printf("\n");
+  char s[32] = "";
+  while(strcmp(s, "u1") && strcmp(s, "u2")){
+    uprintf("input a filename [u1 or u2]: ");
+    ugetline(s);
+    printf("\n");
+  }
   return syscall(5, s, 0, 0);
 }
-
 
 int uexit() {
   char s[32];
@@ -52,7 +53,6 @@ int uexit() {
   num = atoi(s);
   return syscall(6, s, 0, 0);
 }
-
 
 int uwait() {
   char s[32];
