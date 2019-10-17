@@ -27,7 +27,7 @@ int exec(char *cmdline) // cmdline=VA in Uspace
 
   // first token of kline = filename
   cp = kline; i=0;
-  while(*cp != ' '){
+  while(*cp != ' ' && *cp != '\n'){
     filename[i] = *cp;
     i++; cp++;
   } 
@@ -38,7 +38,7 @@ int exec(char *cmdline) // cmdline=VA in Uspace
   }
   kstrcat(file, filename);
   */
-  upa = p->pgdir[2048] & 0xFFFF0000; // PA of Umode image
+  upa = p->pgdir[2049] & 0xFFFF0000; // PA of Umode image
   kprintf("load file %s to %x\n", file, upa);
 
   // load filename to Umode image 
@@ -54,7 +54,7 @@ int exec(char *cmdline) // cmdline=VA in Uspace
   printf("usp=%x ", usp);
   kstrcpy((char *)usp, kline);
 
-  p->usp = (int *)VA(0x100000 - 128);
+  p->usp = (int *)VA(0x200000 - 128);
   printf("p->usp = %x ", p->usp);
 
   // set up syscall kstack frame to return to new image at VA=0

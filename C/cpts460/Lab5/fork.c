@@ -166,14 +166,14 @@ int fork()
 
   printf("running usp=%x linkR=%x\n", running->usp, running->upc);
 
-  PA = (running->pgdir[2048] & 0xFFFF0000);
+  PA = (running->pgdir[2048] & 0xFFFf0000);
   CA = (p->pgdir[2048] & 0xFFFF0000);
   printf("FORK: child  %d uimage at %x\n", p->pid, CA);
   printf("copy Umode image from %x to %x\n", PA, CA);
   // copy 1MB of Umode image
   memcpy((char *)CA, (char *)PA, 0x100000);
 
-  PA = (running->pgdir[2049] & 0xFFFF0000);
+  PA = (running->pgdir[2049] & 0xFFFf0000);
   CA = (p->pgdir[2049] & 0xFFFF0000);
   printf("copy Umode image from %x to %x\n", PA, CA);
   // copy 1MB of Umode image
