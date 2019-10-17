@@ -41,18 +41,22 @@ int kexit(int exitValue) {
 }
 
 int kwait(int *status) {
-  PROC *p;
-  for (int i = 0; i < NPROC; i++) {
-    if (proc[i].ppid == running->pid && proc[i].status == ZOMBIE)
-      p = &proc[i];
+  PROC *p = 0;
+  while (!p) {
+    for (int i = 0; i < NPROC; i++) {
+      if (proc[i].ppid == running->pid && proc[i].status == ZOMBIE) {
+        p = &proc[i];
+        printf("found zombie P%d", p->pid);
+      }
+    }
+    if (p) {
+      *status = p->exitCode;
+      enqueue(&freeList, p);
+      p->parent = 0;
+      p->ppid = 0;
+      p->status = FREE;
+      return p->pid;
+    } else
+      ksleep((int)running);
   }
-  if (p) {
-    *status = p->exitCode;
-    enqueue(&freeList, p);
-    p->parent = 0;
-    p->ppid = 0;
-    p->status = FREE;
-    return p->pid;
-  }
-  ksleep((int)running);
 }

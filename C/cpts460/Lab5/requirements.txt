@@ -1,0 +1,38 @@
+
+
+                 CS460 LAB #5
+        	DUE: 10-18-2019
+               TURN in a hardcopy
+
+1. Objectives: VA to PA mapping
+	       fork-exec as in Unix/Linux
+
+2. Download samples/LAB5/LAB5pre.tgz
+            Run mk to see the fork-exec operations
+
+3. HINT:
+
+   In LAB5pre, NPROC = 9; only P1 to P8 have Umode images.
+   Each process P1 to P8 has a 1MB Umode image at 8M + (pid-1)*1MB.
+
+   In kfork(): build a page table for the new process:
+               ID map LOW 258MB VA to PA for kernel
+	       1MB Umode image at 2GB: only pgdir[2048].
+   In fork() : copy 1MB Umode image of parent to 1MB Umode image of child
+   In exec() : set ustack contents at the high-end of the 1MB Umode image 
+
+4. REQUIREMENTS:
+ =========================================================================
+    Change process Umode images to
+
+        Each process P1 to P8 has a 2MB Umode image at
+             First  1MB at  8MB + (pid-1)*1MB
+	     Second 1MB at 16MB + (pid-1)*1MB
+
+   Note that the two 1MB areas of each process are NOT contiguous,
+   but they are contiguous in process VA space [2GB, 2GB+1MB].
+
+   Modify kfork(), fork(), exec() to suit the 2MB Umode iamges.
+==========================================================================
+
+5. Sample Solution: samples/LAB5/t.bin
