@@ -17,11 +17,15 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 /***********************************************************************
                       io.c file of MTX
 ***********************************************************************/
+// #pragma once
+
 char space = ' ';
 char *ctable = "0123456789ABCDEF";
 char cr = '\r';
 
-int puts(const char *s){ }
+int puts(const char *s){
+  return printf("%s", s);
+}
 
 #define printk printf
 
