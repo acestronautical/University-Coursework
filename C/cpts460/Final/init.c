@@ -5,14 +5,15 @@
 #define SRL1_PATH "/dev/ttyS1"
 
 void parent_loop(), login(), set_io();
-int open();
+extern int open();
+extern char *strcpy(), *strcat();
 
 int cnsl_pid, srl0_pid, srl1_pid;
 int in, out, err;
 
 int main(int argc, char const *argv[]) {
   int pid = getpid();
-  set_io(CNSL_PATH);
+  set_io(CNSL_PATH, &in, &out, &err);
   puts("\n### INIT ###\n");
 
   cnsl_pid = fork();
@@ -27,17 +28,6 @@ int main(int argc, char const *argv[]) {
     login(SRL0_PATH);
   }
   return 0;
-}
-
-void set_io(char *dev) {
-  close(in), close(out), close(err);
-  in = open(dev, O_RDONLY);
-  out = open(dev, O_WRONLY);
-  err = open(dev, O_WRONLY);
-  if (in < 0 || out < 0 || err < 0) {
-    printf("INIT: Failed to open!\n\tCANNOT LOGIN\n");
-    exit(0);
-  }
 }
 
 void login(char *dev) {

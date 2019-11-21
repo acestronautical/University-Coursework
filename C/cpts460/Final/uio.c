@@ -17,7 +17,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 /***********************************************************************
                       io.c file of MTX
 ***********************************************************************/
-// #pragma once
+#pragma once
+
+#define printk printf
+
+extern int read(), write(), printf(char *fmt,...);
 
 char space = ' ';
 char *ctable = "0123456789ABCDEF";
@@ -26,10 +30,6 @@ char cr = '\r';
 int puts(const char *s){
   return printf("%s", s);
 }
-
-#define printk printf
-
-int printf(char *fmt,...);
 
 typedef struct ext2_dir_entry_2 {
 	u32	inode;			/* Inode number */

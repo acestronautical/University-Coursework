@@ -23,6 +23,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 int argc;
 char *argv[32];
+extern int main();
 
 void token(char *line)
 {

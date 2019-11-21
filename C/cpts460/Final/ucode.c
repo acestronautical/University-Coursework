@@ -13,7 +13,7 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 ********************************************************************/
-// #pragma once
+#pragma once
 
 typedef unsigned char   u8;
 typedef unsigned short u16;
@@ -30,7 +30,12 @@ int nk;
 #define EOF -1
 extern char cr;
 
-void putchar(const char c){ }
+extern char *strcpy(), *strcat();
+extern int strcmp(), syscall(), texit();
+
+int putchar(int c){ 
+  mputc(c);
+}
 
 int getc()
 {
@@ -538,4 +543,18 @@ int strcasecmp(char *s1, char *s2)
   }
   //printf("t2=%s\n", t1, t2);
   return strcmp(t1, t2);
+}
+
+
+// MY ADDITIONS
+
+void set_io(char *dev, int *in, int *out, int *err) {
+  close(*in), close(*out), close(*err);
+  *in = open(dev, O_RDONLY);
+  *out = open(dev, O_WRONLY);
+  *err = open(dev, O_WRONLY);
+  if (*in < 0 || *out < 0 || *err < 0) {
+    printf("SET_IO: cannot access %s\n !!! EXIT !!! \n", dev);
+    exit(1);
+  }
 }
