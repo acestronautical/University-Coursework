@@ -55,12 +55,11 @@ int main(int argc, char *argv[]) {
   }
   char line[256];
   int matches = 0, n, lineno = 0;
-  // build the input buffer
   do {
-      lineno++;
+    lineno++;
     n = readline(fd, line);
     if (match(pattern, line)) {
-      printf("line %d: %s",lineno, line);
+      printf("line %d: %s", lineno, line);
       matches++;
     }
   } while (*line && n);
