@@ -182,10 +182,10 @@ into argc and argv[] is done by a C start up code, crt0, in the new image.
 
 $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 5-1. Develop YOUR OWN programs for
-             init                     // for process P1
-             login                   // for login processes on console and UARTs
+DONE             init                     // for process P1
+DONE             login                   // for login processes on console and UARTs
              ls    [filename]         // ls CWD or filename; NO time field
-             cat   [filename]         // cat filename or stdin to stdout
+DONE             cat   [filename]         // cat filename or stdin to stdout
              more  [filename]         // more as in Linux                
              grep  pattern [filename] // print lines containing pattern 
              l2u   [f1 f2]            // convert lower case to upper case
