@@ -188,7 +188,7 @@ DONE             login                   // for login processes on console and U
 DONE             cat   [filename]         // cat filename or stdin to stdout
 DONE             more  [filename]         // more as in Linux                
 DONE             grep  pattern [filename] // print lines containing pattern 
-             l2u   [f1 f2]            // convert lower case to upper case
+DONE             l2u   [f1 f2]            // convert lower case to upper case
              cp    src dest           // copy files, e.g. cp f g
 
      NOTE: [filename] means OPTIONAL. For cat, more, grep, l2u 
