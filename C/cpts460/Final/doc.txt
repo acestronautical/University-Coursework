@@ -186,7 +186,7 @@ DONE             init                     // for process P1
 DONE             login                   // for login processes on console and UARTs
              ls    [filename]         // ls CWD or filename; NO time field
 DONE             cat   [filename]         // cat filename or stdin to stdout
-             more  [filename]         // more as in Linux                
+DONE             more  [filename]         // more as in Linux                
              grep  pattern [filename] // print lines containing pattern 
              l2u   [f1 f2]            // convert lower case to upper case
              cp    src dest           // copy files, e.g. cp f g

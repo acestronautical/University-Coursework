@@ -1,21 +1,18 @@
 #include "ucode.c"
 
-void _line(int fd) {
-  char *c;
-  do {
-    if (read(fd, c, 1) == 0)
-      exit(0);
-    printf("%s", c);
-  } while (*c != '\n' && *c != '\r');
+void print_line(int fd) {
+  char s[512];
+  readline(fd, s);
+  printf("%s", s);
 }
 
-void _page(int fd) {
-  char buf[257];
-  buf[256] = 0;
+void print_page(int fd) {
+  char buf[513];
+  buf[512] = 0;
   int n;
-  n = read(fd, buf, 256);
+  n = read(fd, buf, 512);
   printf("%s", buf);
-  if (n < 256)
+  if (n < 512)
     exit(0);
 }
 
@@ -32,21 +29,18 @@ int main(int argc, char *argv[]) {
     fd = open(argv[1], O_RDONLY);
 
   if (fd < 0)
-    return printf("File '%s' not found.\n", argv[1]);
+    return printf("MORE: fail to open %s\n", argv[1]);
 
-  _page(fd);
-
-  if (status == -1) // That first print page might have been it.
-    return 1;
+  print_page(fd);
 
   while (1) {
     c = getc();
     switch (c) {
     case '\r':
-      _line(fd);
+      print_line(fd);
       break;
     case ' ':
-      _page(fd);
+      print_page(fd);
       break;
     case 'q':
       printf(" \n");
