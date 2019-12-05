@@ -12,7 +12,7 @@ void setup(int argc, char *argv[]) {
       printf("%s: fail to open %s \n", PROG_NAME, argv[1]);
       exit(1);
     }
-  } else if (argc > 3) {
+  } else if (argc > 2) {
     printf("%s: too many args\n", PROG_NAME);
     exit(1);
   }

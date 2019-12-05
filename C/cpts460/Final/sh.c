@@ -1,7 +1,8 @@
 #include "ucode.c"
 
 int do_pipe(char *line, int *pd_og);
-char *pop_pipe(char *line);
+char *pop_tail(char *line);
+int handle_command(char *cmd);
 
 int main(int argc, char *argv[]) {
   char line[256], linecp[256], *linep;
@@ -13,8 +14,7 @@ int main(int argc, char *argv[]) {
     printf("%s: ", cwd);
     gets(line);
     linep = line;
-    while (*linep == ' ')
-      linep++;
+    trimws(&linep);
     if (!*linep)
       continue;
 
@@ -50,9 +50,9 @@ int do_pipe(char *line, int *pd_in) {
     close(pd_in[1]);
   }
   // divide line into head, tail
-  char *cmd = pop_pipe(line);
+  char *tail = pop_tail(line);
   int pd_out[2], pid;
-  if (cmd) {
+  if (tail) {
     pipe(pd_out);
     pid = fork();
     // if parent then we read from it
@@ -61,18 +61,50 @@ int do_pipe(char *line, int *pd_in) {
       close(0);
       dup(pd_out[0]);
       close(pd_out[0]);
-      while (*cmd == ' ')
-        cmd++;
-      exec(cmd);
+      trimws(&tail);
+      handle_command(tail);
     } else
       do_pipe(line, pd_out);
   } else {
-    exec(line);
+    handle_command(line);
   }
   return 0;
 }
 
-char *pop_pipe(char *line) {
+char *redirect_io(char *cmd) {
+  char *cmdp, rune;
+  int fmode;
+  for (cmdp = cmd; *cmdp && *cmdp != '<' && *cmdp != '>'; cmdp++)
+    ;
+  rune = *cmdp;
+  if (rune == 0)
+    return 0;
+  else {
+    *cmdp++ = 0;
+    if (rune == '>') {
+      close(STDOUT);
+      if (*cmdp == '>') {
+        *cmdp++ = 0;
+        fmode = O_WRONLY | O_APPEND;
+      } else
+        fmode = O_WRONLY | O_CREAT;
+    } else if (rune == '<') {
+      close(STDIN);
+      fmode = O_RDONLY;
+    }
+  }
+  trimws(&cmdp);
+  open(cmdp, fmode);
+  return cmdp;
+}
+
+int handle_command(char *cmd) {
+  redirect_io(cmd);
+  exec(cmd);
+  exit(0);
+}
+
+char *pop_tail(char *line) {
   char *linep = line;
   for (; *linep; linep++)
     ;

@@ -323,3 +323,16 @@ int readline(int fd, char *s) {
   // printf("getline: %s", s);
   return strlen(s); // at least 1 because last char=\r or \n
 }
+
+char *trimws(char **strp) {
+  char *str;
+  for (str = *strp; *str; str++)
+    ;
+  str--;
+  for (; *str == ' '; str--)
+    *str = 0;
+  for (str = *strp; *str == ' '; str++)
+    ;
+  *strp = str;
+  return str;
+}
