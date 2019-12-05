@@ -42,26 +42,25 @@ int main(int argc, char *argv[]) {
 }
 
 int do_pipe(char *line, int *pd_in) {
-  // if pipe then we write to it
+  // if pipe given then write to it
   if (pd_in) {
     close(pd_in[0]);
     close(1);
     dup(pd_in[1]);
     close(pd_in[1]);
   }
-  // divide line into head, tail
+  // pop last command
   char *tail = pop_tail(line);
   int pd_out[2], pid;
   if (tail) {
     pipe(pd_out);
     pid = fork();
-    // if parent then we read from it
+    // if parent then read from it
     if (pid) { // parent
       close(pd_out[1]);
       close(0);
       dup(pd_out[0]);
       close(pd_out[0]);
-      trimws(&tail);
       handle_command(tail);
     } else
       do_pipe(line, pd_out);
@@ -99,9 +98,9 @@ char *redirect_io(char *cmd) {
 }
 
 int handle_command(char *cmd) {
+  trimws(&cmd);
   redirect_io(cmd);
   exec(cmd);
-  exit(0);
 }
 
 char *pop_tail(char *line) {

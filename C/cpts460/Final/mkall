@@ -1,0 +1,22 @@
+
+
+
+for cmd in cat cp grep init l2u login more sh; do
+    arm-none-eabi-as -mcpu=arm926ej-s us.s -o us.o
+    arm-none-eabi-gcc -c -mcpu=arm926ej-s -o $cmd.o $cmd.c #2> /dev/null
+    arm-none-eabi-ld -T u.ld us.o $cmd.o eoslib -Ttext=0x80000000 -o $cmd
+
+    mount -o loop sdimage /mnt
+    cp -av $cmd /mnt/bin
+    ls /mnt/bin
+    umount /mnt
+    
+    rm $cmd *.o
+done 
+
+
+echo ready to go?
+read dummy
+
+qemu-system-arm -M versatilepb -m 256M -sd sdimage -kernel wanix \
+-serial mon:stdio -serial /dev/pts/1

@@ -4,6 +4,7 @@
 int fd;
 
 void setup(int argc, char *argv[]) {
+  printf("\nTHIS IS ACE'S %s IN ACTION\n", PROG_NAME);
   if (argc == 1)
     fd = STDIN;
   else if (argc == 2) {
