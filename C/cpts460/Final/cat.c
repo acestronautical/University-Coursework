@@ -1,28 +1,33 @@
 #include "ucode.c"
 
-int main(int argc, char *argv[]) {
-  char buf[256];
-  int fd;
+#define PROG_NAME "CAT"
+int fd;
 
-  if (argc == 1) { 
-    while (1) {
-      gets(buf);
-      if (!strcmp("\0", buf))
-        return 0;
-      printf("%s\n", buf);
-    }
-  } else if (argc == 2) { 
+void setup(int argc, char *argv[]) {
+  if (argc == 1)
+    fd = STDIN;
+  else if (argc == 2) {
     fd = open(argv[1], O_RDONLY);
     if (fd < 0) {
-      printf("CAT: fail to open %s \n", argv[1]);
-      return 1;
+      printf("%s: fail to open %s \n", PROG_NAME, argv[1]);
+      exit(1);
     }
-    while (read(fd, buf, 256) == 256)
-      printf("%s", buf);
-    printf("%s\n", buf);
-  } else {
-    printf("CAT: more than one arg not supported\n");
+  } else if (argc > 3) {
+    printf("%s: too many args\n", PROG_NAME);
+    exit(1);
   }
-  close(fd);
-  exit(0);
+}
+
+void teardown() { close(fd); }
+
+int main(int argc, char *argv[]) {
+  char buf[1];
+  int n;
+  setup(argc, argv);
+  do {
+    n = read(fd, buf, 1);
+    printf("%c", *buf);
+  } while (n == 1);
+  teardown();
+  return 0;
 }

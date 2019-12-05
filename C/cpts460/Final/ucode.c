@@ -20,6 +20,10 @@ typedef unsigned int u32;
 
 #include "crt0.c"
 
+#define STDIN 0
+#define STDOUT 1
+#define STDERR 2
+
 //#include "string.h"
 int pid;
 char line[64], pathname[32], i2[32], i3[32];
@@ -269,6 +273,22 @@ int strcasecmp(char *s1, char *s2) {
   return strcmp(t1, t2);
 }
 // MY ADDITIONS
+
+char **split(char *src, char *tokens[], char delim) {
+  // Modifies src!
+  // Null terminates tokens
+  int index = 1;
+  tokens[0] = src;
+  for (; *src != 0; src++) {
+    if (*src == delim) {
+      *src = 0;
+      tokens[index++] = src + 1;
+    }
+  }
+  tokens[index] = 0;
+  return tokens;
+}
+
 void set_io(char *dev, int *in, int *out, int *err) {
   close(*in), close(*out), close(*err);
   *in = open(dev, O_RDONLY);

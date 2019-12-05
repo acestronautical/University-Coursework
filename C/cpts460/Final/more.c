@@ -1,40 +1,37 @@
 #include "ucode.c"
 
-void print_line(int fd) {
-  char s[512];
-  readline(fd, s);
-  printf("%s", s);
-}
+void print_line();
+void print_page();
 
-void print_page(int fd) {
-  char buf[513];
-  buf[512] = 0;
-  int n;
-  n = read(fd, buf, 512);
-  printf("%s", buf);
-  if (n < 512)
-    exit(0);
+#define PROG_NAME "MORE"
+int fd, fd_tty;
+char buf[256];
+
+void setup(int argc, char *argv[]) {
+  if (argc == 1)
+    fd = STDIN;
+  else if (argc == 2) {
+    fd = open(argv[1], O_RDONLY);
+    if (fd < 0) {
+      printf("%s: fail to open %s \n", PROG_NAME, argv[1]);
+      exit(1);
+    }
+  } else if (argc > 3) {
+    printf("%s: too many args\n", PROG_NAME);
+    exit(1);
+  }
+
+  gettty(buf);
+  fd_tty = open(buf, O_RDONLY);
 }
 
 int main(int argc, char *argv[]) {
-  char tty[64], c;
-  int fd, status;
-
-  if (argc == 1) {
-    fd = dup(0);
-    close(0);
-    gettty(tty);
-    open(tty, O_RDONLY);
-  } else
-    fd = open(argv[1], O_RDONLY);
-
-  if (fd < 0)
-    return printf("MORE: fail to open %s\n", argv[1]);
+  char c = 0;
+  setup(argc, argv);
 
   print_page(fd);
-
-  while (1) {
-    c = getc();
+  while (c != 'q') {
+    c = fgetc(fd_tty);
     switch (c) {
     case '\r':
       print_line(fd);
@@ -44,9 +41,23 @@ int main(int argc, char *argv[]) {
       break;
     case 'q':
       printf(" \n");
-      return 1;
+      break;
     }
   }
 
-  return 1;
+  return 0;
+}
+
+// PRINTING CODE
+void print_line(int fd) {
+  char s[512];
+  int n = readline(fd, s);
+  if (n == 0 || !*s)
+    exit(0);
+  printf("%s", s);
+}
+
+void print_page(int fd) {
+  for (int i; i < 20; i++)
+    print_line(fd);
 }

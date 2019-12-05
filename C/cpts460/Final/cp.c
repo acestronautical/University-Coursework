@@ -1,33 +1,38 @@
 #include "ucode.c"
-int main(int argc, char *argv[]) {
-  int fd1, fd2;
-  char c[1];
+
+#define PROG_NAME "CP"
+int fd1, fd2;
+
+void setup(int argc, char *argv[]) {
   if (argc == 1) {
-    printf("CP: not enough arguments\n");
-    exit(0);
+    printf("%s: not enough arguments\n", PROG_NAME);
+    exit(1);
   } else if (argc == 2) {
     fd1 = open(argv[1], O_RDONLY);
-    fd2 = 1;
+    fd2 = STDOUT;
   } else {
     fd1 = open(argv[1], O_RDONLY);
     fd2 = open(argv[2], O_WRONLY | O_CREAT);
   }
   if (fd1 < 0 || fd2 < 0) {
-    printf("Error opening file.\n");
-    return 1;
+    printf("%s: fail to open file.\n", PROG_NAME);
+    exit(1);
   }
-  char buf[1024];
-  int n;
-  do {
-    n = read(fd1, buf, 1024);
-    // printf("got: %s", buf);
-    if (argc == 2)
-      printf("%s", buf);
-    else
-      write(fd2, buf, 1024);
+}
 
-  } while (n == 1024);
+void teardown() {
   close(fd1);
   close(fd2);
-  return 1;
+}
+
+int main(int argc, char *argv[]) {
+  char buf[256];
+  int n;
+  setup(argc, argv);
+  do {
+    n = read(fd1, buf, 256);
+    write(fd2, buf, n);
+  } while (n == 256);
+  teardown();
+  return 0;
 }

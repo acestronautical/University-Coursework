@@ -1,35 +1,42 @@
 #include "ucode.c"
-int main(int argc, char *argv[]) {
-  int fd1, fd2;
-  char c[1];
+
+#define PROG_NAME "L2U"
+int fd1, fd2;
+
+void setup(int argc, char *argv[]) {
   if (argc == 1) {
-    printf("L2U: not enough arguments\n");
-    exit(0);
+    fd1 = STDIN;
+    fd2 = STDOUT;
   } else if (argc == 2) {
     fd1 = open(argv[1], O_RDONLY);
-    fd2 = 1;
+    fd2 = STDOUT;
   } else {
     fd1 = open(argv[1], O_RDONLY);
     fd2 = open(argv[2], O_WRONLY | O_CREAT);
   }
   if (fd1 < 0 || fd2 < 0) {
-    printf("Error opening file.\n");
-    return 1;
+    printf("%s: fail to open file.\n", PROG_NAME);
+    exit(1);
   }
-  char line[1024];
-  while (readline(fd1, line)) {
-    // printf("got line: %s\n", line);
-    for (int i = 0; i < 1024; i++) {
-      if (line[i] > 96 && line[i] < 123)
-        line[i] -= 32;
-    }
-    // printf("line now: %s\n", line);
-    if (argc == 2)
-      printf("%s", line);
-    else
-      write(fd2, line, 1024);
-  }
+}
+
+void teardown() {
   close(fd1);
   close(fd2);
-  return 1;
+}
+
+int main(int argc, char *argv[]) {
+  char buf[256];
+  int n;
+  setup(argc, argv);
+  while (n = read(fd1, buf, 256)) {
+    buf[n] = 0;
+    for (int i = 0; i < 256; i++) {
+      if (buf[i] > 96 && buf[i] < 123)
+        buf[i] -= 32;
+    }
+    write(fd2, buf, n);
+  }
+  teardown();
+  return 0;
 }
