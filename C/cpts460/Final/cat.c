@@ -20,11 +20,15 @@ void setup(int argc, char *argv[]) {
 
 int main(int argc, char *argv[]) {
   char buf[1];
-  int n;
+  STAT stat_buf, *sptr = &stat_buf;
+  int n, r;
   setup(argc, argv);
-  do {
-    n = read(fd, buf, 1);
-    printf("%c", *buf);
-  } while (n == 1);
+  r = fstat(STDOUT, (char *)sptr);
+  while (read(fd, buf, 1)) {
+    if (S_ISREG(sptr->st_mode))
+      write(STDOUT, buf, 1);
+    else
+      printf("%c", *buf);
+  }
   exit(0);
 }

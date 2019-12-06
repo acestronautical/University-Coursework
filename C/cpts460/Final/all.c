@@ -18,15 +18,18 @@ void setup(int argc, char *argv[]) {
 }
 int main(int argc, char *argv[]) {
   char buf[1];
-  int n;
+  STAT stat_buf, *sptr = &stat_buf;
+  int n, r;
   setup(argc, argv);
-  do {
-    n = read(fd, buf, 1);
-    printf("%c", *buf);
-  } while (n == 1);
+  r = fstat(STDOUT, (char *)sptr);
+  while (read(fd, buf, 1)) {
+    if (S_ISREG(sptr->st_mode))
+      write(STDOUT, buf, 1);
+    else
+      printf("%c", *buf);
+  }
   exit(0);
 }
-
 /* cp.c */
 #include "ucode.c"
 #define PROG_NAME "CP"
@@ -62,43 +65,42 @@ int main(int argc, char *argv[]) {
 int argc;
 char *argv[32];
 extern int main();
-void token(char *line)
-{
+void token(char *line) {
   char *cp;
   cp = line;
   argc = 0;
-  
-  while (*cp != 0){
-       while (*cp == ' ') *cp++ = 0;        
-       if (*cp != 0)
-           argv[argc++] = cp;         
-       while (*cp != ' ' && *cp != 0) cp++;                  
-       if (*cp != 0)   
-           *cp = 0;                   
-       else 
-            break; 
-       cp++;
+
+  while (*cp != 0) {
+    while (*cp == ' ')
+      *cp++ = 0;
+    if (*cp != 0)
+      argv[argc++] = cp;
+    while (*cp != ' ' && *cp != 0)
+      cp++;
+    if (*cp != 0)
+      *cp = 0;
+    else
+      break;
+    cp++;
   }
   argv[argc] = 0;
 }
-void showarg(int argc, char *argv[ ])
-{
+void showarg(int argc, char *argv[]) {
   int i;
   printf("argc=%d ", argc);
-  for (i=0; i<argc; i++)
-    //printf("argv[%d]=%s ", i, argv[i]);
+  for (i = 0; i < argc; i++)
+    // printf("argv[%d]=%s ", i, argv[i]);
     printf("%s ", argv[i]);
   prints("\n");
 }
 // BEFORE: r0 was trashed in goUmode(), so had to rely on r1->string
 // NOW: r0 is NOT trashed in goUmode() ==> should be r0 alone
-void main0(char *s)
-{
-  if (s){
-    //printf("s=%s\n", s);
-     token(s);
+void main0(char *s) {
+  if (s) {
+    // printf("s=%s\n", s);
+    token(s);
   }
-  //showarg(argc, argv);
+  // showarg(argc, argv);
   main(argc, argv);
 }
 
@@ -144,7 +146,7 @@ int main(int argc, char *argv[]) {
   printf("%d matches found\n", matches);
   exit(0);
 }
-// MATCHING CODE 
+// MATCHING CODE
 // Inspired by code from Rob Pikes "The Practice of Programming"
 // c    matches any literal character c
 // .    matches any single character
@@ -354,17 +356,15 @@ int authenticate(char *user, char *pass) {
 
 /* ls.c */
 #include "ucode.c"
-/* 
-LS NOT IMPLEMENTED, RAN OUT OF TIME AND
-NOT SURE HOW TO DO THIS WITHOUT READDIR()
+/*
+LS NOT WORKING, RAN OUT OF TIME
         ¯\_(ツ)_/¯
 */
 char *t1 = "xwrxwrxwr-------";
 char *t2 = "----------------";
 struct stat mystat, *sp;
 int opendir(pathaname) { return open(pathname, O_RDONLY); }
-int ls_file(char *fname)
-{
+int ls_file(char *fname) {
   struct stat fstat, *sp = &fstat;
   int r, i;
   char sbuf[4096], ftime[4096];
@@ -391,8 +391,7 @@ int ls_file(char *fname)
   }
   printf("\n");
 }
-int ls_dir(char *dname)
-{
+int ls_dir(char *dname) {
   char name[256];
   DIR *dp, *ep;
   dp = opendir(dname);
@@ -474,7 +473,7 @@ int main(int argc, char *argv[]) {
   }
   exit(0);
 }
-// PRINTING CODE
+// more print commands
 void print_line(int fd) {
   char s[512];
   int n = readline(fd, s);
@@ -632,7 +631,7 @@ int readline(int fd, char *s) {
     return 0;
   *cp++ = c;
   *cp = 0;
-  return strlen(s); 
+  return strlen(s);
 }
 char *trimws(char **strp) {
   char *str;
@@ -649,15 +648,13 @@ char *trimws(char **strp) {
 
 /* uio.c changes */
 // Only changes to uio.c are shown
-#define	__S_IFMT	0170000	/* These bits determine file type.  */
-#define	__S_ISTYPE(mode, mask)	(((mode) & __S_IFMT) == (mask))
-#define	__S_IFDIR	0040000	/* Directory.  */
-#define	S_ISDIR(mode)	 __S_ISTYPE((mode), __S_IFDIR)
-#define	__S_IFREG	0100000	/* Regular file.  */
-#define	S_ISREG(mode)	 __S_ISTYPE((mode), __S_IFREG)
-#define	__S_IFLNK	0120000	/* Symbolic link.  */
-# define S_ISLNK(mode)	 __S_ISTYPE((mode), __S_IFLNK)
+#define __S_IFMT 0170000 /* These bits determine file type.  */
+#define __S_ISTYPE(mode, mask) (((mode)&__S_IFMT) == (mask))
+#define __S_IFDIR 0040000 /* Directory.  */
+#define S_ISDIR(mode) __S_ISTYPE((mode), __S_IFDIR)
+#define __S_IFREG 0100000 /* Regular file.  */
+#define S_ISREG(mode) __S_ISTYPE((mode), __S_IFREG)
+#define __S_IFLNK 0120000 /* Symbolic link.  */
+#define S_ISLNK(mode) __S_ISTYPE((mode), __S_IFLNK)
 
-int puts(const char *s){
-  return printf("%s", s);
-}
+int puts(const char *s) { return printf("%s", s); }
