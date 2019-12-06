@@ -1,19 +1,16 @@
 #include "ucode.c"
 
-#define CNSL_PATH "/dev/tty0"
-#define SRL0_PATH "/dev/ttyS0"
-#define SRL1_PATH "/dev/ttyS1"
-
-void parent_loop(), login(), set_io();
+void parent_loop();
 extern int open();
 extern char *strcpy(), *strcat();
 
 int cnsl_pid, srl0_pid, srl1_pid;
-int in, out, err;
+int in, out;
 
 int main(int argc, char const *argv[]) {
   int pid = getpid();
-  set_io(CNSL_PATH, &in, &out, &err);
+  in = open("/dev/tty0", O_RDONLY);
+  out = open("/dev/tty0", O_WRONLY);
   puts("\n### INIT ###\n");
 
   cnsl_pid = fork();
@@ -24,24 +21,15 @@ int main(int argc, char const *argv[]) {
       if (srl1_pid) { // parent
         parent_loop();
       } else { // child
-        login(SRL1_PATH);
+        exec("login /dev/ttyS1");
       }
     } else { // child
-      login(SRL0_PATH);
+      exec("login /dev/ttyS0");
     }
   } else { // child
-    login(CNSL_PATH);
+    exec("login /dev/tty0");
   }
   return 0;
-}
-
-void login(char *dev) {
-  char buf[64];
-  strcpy(buf, "login ");
-  strcat(buf, dev);
-  exec(buf);
-  printf("LOGIN: error exec(%s)\n", buf);
-  exit(0);
 }
 
 void parent_loop() {
@@ -51,16 +39,22 @@ void parent_loop() {
     child_pid = wait(&status);
     printf("P%d harvests dead child P%d with status %x\n", getpid(), child_pid,
            status);
-    int new_child = fork();
-    if (new_child) { // parent
-      printf("P%d forks login process P%d\n", getpid(), new_child);
-    } else { // child
-      if (child_pid == cnsl_pid) {
-        login(CNSL_PATH);
-      } else if (child_pid == srl0_pid) {
-        login(SRL0_PATH);
-      } else if (child_pid == srl1_pid) {
-        login(SRL1_PATH);
+    if (child_pid == cnsl_pid || child_pid == srl0_pid ||
+        child_pid == srl1_pid) {
+      int new_child = fork();
+      if (new_child) { // parent
+        printf("P%d forks login process P%d\n", getpid(), new_child);
+      } else { // child
+        if (child_pid == cnsl_pid) {
+          cnsl_pid = new_child;
+          exec("login /dev/tty0");
+        } else if (child_pid == srl0_pid) {
+          srl0_pid = new_child;
+          exec("login /dev/ttyS0");
+        } else if (child_pid == srl1_pid) {
+          srl1_pid = new_child;
+          exec("login /dev/ttyS1");
+        }
       }
     }
   }
