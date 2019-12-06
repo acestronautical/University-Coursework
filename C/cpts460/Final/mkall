@@ -1,6 +1,3 @@
-
-
-
 for cmd in cat cp grep init l2u login more sh; do
     arm-none-eabi-as -mcpu=arm926ej-s us.s -o us.o
     arm-none-eabi-gcc -c -mcpu=arm926ej-s -o $cmd.o $cmd.c #2> /dev/null

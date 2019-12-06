@@ -28,8 +28,6 @@ void setup(int argc, char *argv[]) {
   }
 }
 
-void teardown() { close(fd); }
-
 int main(int argc, char *argv[]) {
   char line[256];
   int matches = 0, n, lineno = 0;
@@ -43,11 +41,17 @@ int main(int argc, char *argv[]) {
     }
   } while (*line && n);
   printf("%d matches found\n", matches);
-  teardown();
-  return 0;
+  exit(0);
 }
 
-// MATCH CODE
+// MATCHING CODE 
+// Inspired by code from Rob Pikes "The Practice of Programming"
+// c    matches any literal character c
+// .    matches any single character
+// ^    matches the beginning of the input string
+// $    matches the end of the input string
+// *    matches zero or more occurrences of the previous character
+
 int matchstar(int c, char *regexp, char *text) {
   do {
     if (matchhere(regexp, text))

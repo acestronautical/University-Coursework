@@ -20,11 +20,6 @@ void setup(int argc, char *argv[]) {
   }
 }
 
-void teardown() {
-  close(fd1);
-  close(fd2);
-}
-
 int main(int argc, char *argv[]) {
   char buf[256];
   int n;
@@ -37,6 +32,5 @@ int main(int argc, char *argv[]) {
     }
     write(fd2, buf, n);
   }
-  teardown();
-  return 0;
+  exit(0);
 }

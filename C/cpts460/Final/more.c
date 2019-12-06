@@ -20,7 +20,6 @@ void setup(int argc, char *argv[]) {
     printf("%s: too many args\n", PROG_NAME);
     exit(1);
   }
-
   gettty(buf);
   fd_tty = open(buf, O_RDONLY);
 }
@@ -44,8 +43,7 @@ int main(int argc, char *argv[]) {
       break;
     }
   }
-
-  return 0;
+  exit(0);
 }
 
 // PRINTING CODE

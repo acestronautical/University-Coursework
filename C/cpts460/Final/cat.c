@@ -18,8 +18,6 @@ void setup(int argc, char *argv[]) {
   }
 }
 
-void teardown() { close(fd); }
-
 int main(int argc, char *argv[]) {
   char buf[1];
   int n;
@@ -28,6 +26,5 @@ int main(int argc, char *argv[]) {
     n = read(fd, buf, 1);
     printf("%c", *buf);
   } while (n == 1);
-  teardown();
-  return 0;
+  exit(0);
 }
