@@ -1,62 +1,92 @@
 #include "ucode.c"
+/* 
 
-#define S_ISDIR(m) ((m >> 9) == 040)
-#define S_ISREG(m) ((m >> 12) == 010)
-#define S_ISLNK(m) ((m >> 12) == 012)
+MISSING READDIR SYSTEM CALL
+NOT SURE HOW TO ACCOMPLISH LS WITHOUT IT
 
-const char *t1 = "xwrxwrxwr-------";
-const char *t2 = "----------------";
+        ¯\_(ツ)_/¯
+*/
 
-void ls_file(char *filename) {
-  STAT s;
-  stat(filename, &s);
-  if (S_ISREG(s.st_mode))
-    mputc('-');
-  else if (S_ISDIR(s.st_mode))
-    mputc('d');
-  else
-    mputc('l');
-  for (int i = 8; i >= 0; i--)
-    mputc((s.st_mode & (1 << i)) ? t1[i] : t2[i]);
-  printf(" %d %d %d %d ", s.st_nlink, s.st_gid, s.st_uid, s.st_size);
-  prints(filename);
-  if (S_ISLNK(s.st_mode)) {
-    prints(" -> ");
-    char link[256];
-    readlink(filename, link);
-    prints(link);
+#define	__S_IFMT	0170000	/* These bits determine file type.  */
+#define	__S_ISTYPE(mode, mask)	(((mode) & __S_IFMT) == (mask))
+#define	__S_IFDIR	0040000	/* Directory.  */
+#define	S_ISDIR(mode)	 __S_ISTYPE((mode), __S_IFDIR)
+#define	__S_IFREG	0100000	/* Regular file.  */
+#define	S_ISREG(mode)	 __S_ISTYPE((mode), __S_IFREG)
+#define	__S_IFLNK	0120000	/* Symbolic link.  */
+# define S_ISLNK(mode)	 __S_ISTYPE((mode), __S_IFLNK)
+
+
+char *t1 = "xwrxwrxwr-------";
+char *t2 = "----------------";
+struct stat mystat, *sp;
+int opendir(pathaname) { return open(pathname, O_RDONLY); }
+int ls_file(char *fname)
+{
+  struct stat fstat, *sp = &fstat;
+  int r, i;
+  char sbuf[4096], ftime[4096];
+  r = stat(fname, sp);
+  if (S_ISDIR(sp->st_mode))
+    printf("%c", 'd');
+  if (S_ISREG(sp->st_mode))
+    printf("%c", '-');
+  if (S_ISLNK(sp->st_mode))
+    printf("%c", 'l');
+  for (i = 8; i >= 0; i--) {
+    if (sp->st_mode & (1 << i))
+      printf("%c", t1[i]);
+    else
+      printf("%c", t2[i]);
   }
-  prints("\n");
+  printf("%4d ", sp->st_nlink);
+  printf("%4d ", sp->st_uid);
+  printf("%8d ", sp->st_size);
+  printf("%s", fname);
+  if (S_ISLNK(sp->st_mode)) {
+    r = readlink(fname, sbuf);
+    printf(" -> %s", sbuf);
+  }
+  printf("\n");
 }
 
-void ls_dir(char *filename) {
-  char buffer[1024], temp[256];
-  int dir = open(filename, O_RDONLY);
-  read(dir, buffer, 1024);
-  char *cp = buffer;
-  DIR *dp = (DIR *)buffer;
-  while (cp < 1024 + buffer) {
-    mystrncpy(temp, dp->name, dp->name_len);
-    temp[dp->name_len] = '\0';
-    ls_file(temp);
-    cp += dp->rec_len;
-    dp = (DIR *)cp;
+int ls_dir(char *dname)
+{
+  char name[256];
+  DIR *dp, *ep;
+  dp = opendir(dname);
+  while (ep = readdir(dp)) {
+    strcpy(name, ep->name);
+    if (!strcmp(name, ".") || !strcmp(name, ".."))
+      continue;
+    strcpy(name, dname);
+    strcat(name, "/");
+    strcat(name, ep->name);
+    ls_file(name);
   }
 }
 
 int main(int argc, char *argv[]) {
-  char cwd[256];
-  getcwd(cwd);
-  if (argc < 2)
-    ls_dir(cwd);
-  else {
-    STAT s;
-    stat(argv[1], &s);
-    if (S_ISDIR(s.st_mode))
-      ls_dir(argv[1]);
-    else
-      ls_file(argv[1]);
+  struct stat mystat, *sp;
+  int r;
+  char *s;
+  char filename[1024], cwd[1024];
+  s = argv[1];
+  if (argc == 1)
+    s = "./";
+  sp = &mystat;
+  if ((r = stat(s, sp)) < 0) {
+    exit(1);
   }
-
-  return 0;
+  strcpy(filename, s);
+  if (s[0] != '/') {
+    getcwd(cwd);
+    strcpy(filename, cwd);
+    strcat(filename, "/");
+    strcat(filename, s);
+  }
+  if (S_ISDIR(sp->st_mode))
+    ls_dir(filename);
+  else
+    ls_file(filename);
 }
