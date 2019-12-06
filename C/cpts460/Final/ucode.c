@@ -289,16 +289,6 @@ char **split(char *src, char *tokens[], char delim) {
   return tokens;
 }
 
-void set_io(char *dev, int *in, int *out, int *err) {
-  close(*in), close(*out), close(*err);
-  *in = open(dev, O_RDONLY);
-  *out = open(dev, O_WRONLY);
-  *err = open(dev, O_WRONLY);
-  if (*in < 0 || *out < 0 || *err < 0) {
-    printf("SET_IO: cannot access %s\n !!! EXIT !!! \n", dev);
-    exit(1);
-  }
-}
 int fgetc(int fd) {
   int c, n;
   n = read(fd, (char *)&c, 1);
@@ -306,8 +296,7 @@ int fgetc(int fd) {
     return EOF;
   return (c & 0x7F);
 }
-// getline() does NOT show the input chars AND no cooking:
-// for reditected inputs from a file which may contain '\b' chars
+
 int readline(int fd, char *s) {
   int c;
   char *cp = s;
@@ -318,10 +307,9 @@ int readline(int fd, char *s) {
   }
   if (c == EOF)
     return 0;
-  *cp++ = c; // a string with last char=\n or \r
+  *cp++ = c;
   *cp = 0;
-  // printf("getline: %s", s);
-  return strlen(s); // at least 1 because last char=\r or \n
+  return strlen(s); 
 }
 
 char *trimws(char **strp) {

@@ -1,28 +1,31 @@
 #include "ucode.c"
 #define PSWRD_PATH "/etc/passwd"
 
+extern int atoi();
 int authenticate();
-
-int in, out, err;
 char **split(char *src, char *tokens[], char delim);
 
+int in, out, err, fd;
 char uname[128], home[128], program[128];
 int uid, gid;
 
 int main(int argc, char const *argv[]) {
+  char *dev = (char *)argv[1];
+  close(STDIN), close(STDOUT);
+  open(dev, STDIN);
+  open(dev, STDOUT);
+  open(dev, STDERR);
+  settty(dev);
+  fd = open(PSWRD_PATH, O_RDONLY);
+
   if (argc != 2) {
     printf("\nLOGIN: wrong number of args\n");
     exit(1);
   }
 
-  char *dev = (char *)argv[1]; // discard const
-  set_io(dev, &in, &out, &err);
-
-  settty(dev);
-
   char user[128], pass[128];
   for (int tries = 3; tries >= 0; tries--) {
-    printf("Username: ");
+    printf("Login: ");
     gets(user);
     printf("Password: ");
     gets(pass);
@@ -38,19 +41,17 @@ int main(int argc, char const *argv[]) {
     printf("%d login attempts remaining.\n", tries);
   }
   printf("too many attempts, goodbye");
-  exit(1);
-
+  close(fd);
   return 0;
 }
 
 int authenticate(char *user, char *pass) {
-  int fp = open(PSWRD_PATH, O_RDONLY);
-  if (fp == '\0') {
+  if (fd == '\0') {
     printf("LOGIN: fail to open %s\n", PSWRD_PATH);
     return 0;
   }
   char buf[512];
-  int amt_read = read(fp, buf, 512);
+  int amt_read = read(fd, buf, 512);
   if (amt_read <= 0) {
     printf("LOGIN: fail to read %s\n", PSWRD_PATH);
     return 0;
@@ -66,11 +67,10 @@ int authenticate(char *user, char *pass) {
       strcpy(uname, fields[4]);
       strcpy(home, fields[5]);
       strcpy(program, fields[6]);
-      close(fp);
+      close(fd);
       return 1;
     }
   }
   puts("bad login\n");
-  close(fp);
   return 0;
 }
