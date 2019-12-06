@@ -7,16 +7,6 @@ NOT SURE HOW TO ACCOMPLISH LS WITHOUT IT
         ¯\_(ツ)_/¯
 */
 
-#define	__S_IFMT	0170000	/* These bits determine file type.  */
-#define	__S_ISTYPE(mode, mask)	(((mode) & __S_IFMT) == (mask))
-#define	__S_IFDIR	0040000	/* Directory.  */
-#define	S_ISDIR(mode)	 __S_ISTYPE((mode), __S_IFDIR)
-#define	__S_IFREG	0100000	/* Regular file.  */
-#define	S_ISREG(mode)	 __S_ISTYPE((mode), __S_IFREG)
-#define	__S_IFLNK	0120000	/* Symbolic link.  */
-# define S_ISLNK(mode)	 __S_ISTYPE((mode), __S_IFLNK)
-
-
 char *t1 = "xwrxwrxwr-------";
 char *t2 = "----------------";
 struct stat mystat, *sp;

@@ -16,7 +16,6 @@ int main(int argc, char const *argv[]) {
   open(dev, STDOUT);
   open(dev, STDERR);
   settty(dev);
-  fd = open(PSWRD_PATH, O_RDONLY);
 
   if (argc != 2) {
     printf("\nLOGIN: wrong number of args\n");
@@ -46,6 +45,8 @@ int main(int argc, char const *argv[]) {
 }
 
 int authenticate(char *user, char *pass) {
+  fd = open(PSWRD_PATH, O_RDONLY);
+
   if (fd == '\0') {
     printf("LOGIN: fail to open %s\n", PSWRD_PATH);
     return 0;
@@ -72,5 +73,6 @@ int authenticate(char *user, char *pass) {
     }
   }
   puts("bad login\n");
+  close(fd);
   return 0;
 }
