@@ -215,91 +215,22 @@ bool populate_local(TABLE T) {
   }
 }
 
-void *trace_global(TABLE T) {
+void *trace(TABLE T) {
   _MATCHES = 0, _MISMATCHES = 0, _GAPS = 0, _OPENINGS = 0;
   _TRACE_S1_i = (char *)calloc(sizeof(char), T.rows_i + T.cols_j);
   _TRACE_S2_j = (char *)calloc(sizeof(char), T.rows_i + T.cols_j);
   _TRACE_COMP = (char *)calloc(sizeof(char), T.rows_i + T.cols_j);
-  int i = T.rows_i - 1, j = T.cols_j - 1, pos = 0, m = 0;
+  int i, j, pos = 0, m = 0;
+  if (_LOCAL)
+    i = _OPTIMAL_I, j = _OPTIMAL_J;
+  else
+    i = T.rows_i - 1, j = T.cols_j - 1;
+
   CELL *cur = &T.cell[i][j], *prev;
   int score = MAX3(cur->S, cur->D, cur->I);
   while (i > 0 | j > 0) {
-
-    if (cur->S == score) { // substitution / diag
-      m = M(i, j);
-      m == _MATCH ? _MATCHES++ : _MISMATCHES++;
-      _TRACE_S1_i[pos] = _S1_i[i - 1];
-      _TRACE_S2_j[pos] = _S2_j[j - 1];
-      _TRACE_COMP[pos] = m == _MATCH ? '|' : ' ';
-
-      i--, j--;
-      prev = &T.cell[i][j];
-      if (cur->S == (prev->D + m)) {
-        score = prev->D;
-      } else if (cur->S == (prev->S + m)) {
-        score = prev->S;
-      } else {
-        score = prev->I;
-      }
-
-    } else if (cur->D == score) { // deletion / vert
-      _TRACE_S1_i[pos] = _S1_i[i - 1];
-      _TRACE_S2_j[pos] = '_';
-      _TRACE_COMP[pos] = ' ';
-      _GAPS++;
-
-      i--;
-      prev = &T.cell[i][j];
-
-      if (cur->D == (prev->D + _G)) {
-        score = prev->D;
-      } else if (cur->D == (prev->S + _H + _G)) {
-        score = prev->S;
-        _OPENINGS++;
-      } else {
-        score = prev->I;
-        _OPENINGS++;
-      }
-
-    } else { // insertion / zont
-      _TRACE_S1_i[pos] = '_';
-      _TRACE_S2_j[pos] = _S2_j[j - 1];
-      _TRACE_COMP[pos] = ' ';
-      _GAPS++;
-
-      j--;
-      prev = &T.cell[i][j];
-
-      if (cur->I == (prev->D + _G + _H)) {
-        score = prev->D;
-        _OPENINGS++;
-      } else if (cur->I == (prev->S + _H + _G)) {
-        score = prev->S;
-        _OPENINGS++;
-      } else {
-        score = prev->I;
-      }
-    }
-    pos++;
-    cur = prev;
-  }
-  // null terminate
-  _TRACE_S1_i[pos] = _TRACE_S2_j[pos] = _TRACE_COMP[pos] = 0;
-  // reverse
-  rev_str(_TRACE_S1_i), rev_str(_TRACE_S2_j), rev_str(_TRACE_COMP);
-}
-
-
-void *trace_local(TABLE T) {
-  _MATCHES = 0, _MISMATCHES = 0, _GAPS = 0, _OPENINGS = 0;
-  _TRACE_S1_i = (char *)calloc(sizeof(char), T.rows_i + T.cols_j);
-  _TRACE_S2_j = (char *)calloc(sizeof(char), T.rows_i + T.cols_j);
-  _TRACE_COMP = (char *)calloc(sizeof(char), T.rows_i + T.cols_j);
-  int i = _OPTIMAL_I, j = _OPTIMAL_J, pos = 0, m = 0;
-  CELL *cur = &T.cell[i][j], *prev;
-  int score = MAX3(cur->S, cur->D, cur->I);
-  while ((i > 0 | j > 0) && score > 0) {
-
+    if (_LOCAL && score <= 0)
+      break;
     if (cur->S == score) { // substitution / diag
       m = M(i, j);
       m == _MATCH ? _MATCHES++ : _MISMATCHES++;
@@ -367,7 +298,7 @@ void *trace_local(TABLE T) {
 void align(TABLE T) {
   _LOCAL ? init_local(T) : init_global(T);
   _LOCAL ? populate_local(T) : populate_global(T);
-  _LOCAL ? trace_local(T) : trace_global(T);
+  trace(T);
 }
 
 // print_result: print to result.txt
