@@ -4,6 +4,9 @@ CptS 471/571 Assignment Cover Sheet
 Assignment: Programming Project 1
 Name: Cassidy, Ace
 
+https://gcc.gnu.org/onlinedocs/gcc-4.9.2/gcc/Typeof.html#Typeof
+
+
 I certify that I have listed above all the sources that I consulted regarding
 this assignment, and that I have not received or given any assistance that is
 contrary to the letter or the spirit of the collaboration guidelines for this
@@ -12,17 +15,7 @@ assignment.
 Dated: January, 31, 2020
 */
 
-char *SEQ1 =
-    "ACATGCTACACGTATCCGATACCCCGTAACCGATAACGATACACAGACCTCGTACGCTTGCTACAAC"
-    "GTACTCTATAACCGAGAACGATTGACATGCCTCGTACACATGCTACACGTACTCCGAT";
-
-char *SEQ2 = "ACATGCGACACTACTCCGATACCCCGTAACCGATAACGATACAGAGACCTCGTACGCTTGC"
-             "TAATAACCGAGAA"
-             "CGATTGACATTCCTCGTACAGCTACACGTACTCCGAT";
-
-// #define SEQ1 "ACATGCT"
-
-// #define SEQ2 "AACATGCT"
+#pragma once
 
 // INCUDES //
 #pragma region
@@ -35,15 +28,13 @@ char *SEQ2 = "ACATGCGACACTACTCCGATACCCCGTAACCGATAACGATACAGAGACCTCGTACGCTTGC"
 
 // MACROS //
 #pragma region
-// typeof provides safety
-// https://gcc.gnu.org/onlinedocs/gcc-4.9.2/gcc/Typeof.html#Typeof
+// typeof safety https://gcc.gnu.org/onlinedocs/gcc-4.9.2/gcc/Typeof.html#Typeof
 #define MAX2(a, b)                                                             \
   ({                                                                           \
     __typeof__(a) _a = (a);                                                    \
     __typeof__(b) _b = (b);                                                    \
     _a > _b ? _a : _b;                                                         \
   })
-
 #define MAX3(a, b, c) MAX2(MAX2(a, b), c)
 #define MAX4(a, b, c, d) MAX2(MAX3(a, b, c), d);
 #define NEG_INF INT_MIN + 10000
@@ -65,6 +56,13 @@ typedef struct TABLE {
 #pragma region
 // make all static so not externally linked
 
+char *SEQ1 =
+    "ACATGCTACACGTATCCGATACCCCGTAACCGATAACGATACACAGACCTCGTACGCTTGCTACAAC"
+    "GTACTCTATAACCGAGAACGATTGACATGCCTCGTACACATGCTACACGTACTCCGAT";
+
+char *SEQ2 = "ACATGCGACACTACTCCGATACCCCGTAACCGATAACGATACAGAGACCTCGTACGCTTGC"
+             "TAATAACCGAGAACGATTGACATTCCTCGTACAGCTACACGTACTCCGAT";
+
 // flags
 static bool _LOCAL = false;
 // scoring
@@ -75,54 +73,6 @@ static int _OPTIMAL_SCORE = NEG_INF, _OPTIMAL_J = NEG_INF, _OPTIMAL_I = NEG_INF,
 // sequences
 static char *_S1_i = NULL, *_S2_j = NULL, *_TRACE_S1_i = NULL,
             *_TRACE_S2_j = NULL, *_TRACE_COMP = NULL;
-#pragma endregion
-
-// FORWARD DECLARE FUNCTIONS //
-#pragma region
-char *set_S1(char *);
-char *set_S2(char *);
-bool set_LOCAL(bool);
-int set_H(const int);
-int set_G(const int);
-int set_MATCH(int);
-int set_MISMATCH(int);
-int OPTIMAL(void);
-int MATCHES(void);
-int MISMATCHES(void);
-int GAPS(void);
-int OPENINGS(void);
-int M(int, int);
-void rev_str(char *);
-bool allocate_table(TABLE *);
-bool init_global(TABLE);
-bool init_local(TABLE);
-bool populate_global(TABLE);
-bool populate_local(TABLE);
-void *trace_global(TABLE);
-void debug_print(TABLE);
-#pragma endregion
-
-// MAIN //
-#pragma region
-int main(int argc, char const *argv[]) {
-  TABLE T;
-  set_LOCAL(false);
-  set_S1(SEQ1), set_S2(SEQ2);
-  set_MATCH(1), set_MISMATCH(-2), set_G(-2), set_H(-5);
-  allocate_table(&T) ?: (puts("fail to allocate memory\n"), exit(1));
-  _LOCAL ? init_local(T) : init_global(T);
-  _LOCAL ? populate_local(T) : populate_global(T);
-  debug_print(T);
-  trace_global(T);
-  FILE *f = fopen("result.txt", "w");
-  fprintf(f, "%s\n", _TRACE_S1_i);
-  fprintf(f, "%s\n", _TRACE_COMP);
-  fprintf(f, "%s\n", _TRACE_S2_j);
-  fprintf(f, "%s optimal score: %d\n", _LOCAL ? "Local" : "Global",
-          _OPTIMAL_SCORE);
-  fclose(f);
-  return 0;
-}
 #pragma endregion
 
 // FUNCTIONS //
@@ -157,14 +107,13 @@ int M(int i, int j) {
   return a == b ? _MATCH : _MISMATCH;
 };
 
-// rev_str: reverse string in place, excerpted from SO because i've written this
-// function so many times
+// rev_str: reverse string in place
 void rev_str(char *s) {
-  char t, *e = s + strlen(s);
-  while (--e > s) {
-    t = *s;
-    *s++ = *e;
-    *e = t;
+  char c, *right = s + strlen(s), *left = s;
+  while (--right > left) {
+    c = *left;
+    *left++ = *right;
+    *right = c;
   }
 }
 
@@ -314,7 +263,7 @@ void *trace_global(TABLE T) {
 
     } else { // insertion / zont
       _TRACE_S1_i[pos] = '_';
-      _TRACE_S2_j[pos] = _S2_j[j -1 ];
+      _TRACE_S2_j[pos] = _S2_j[j - 1];
       _TRACE_COMP[pos] = ' ';
       _GAPS++;
 
@@ -338,6 +287,98 @@ void *trace_global(TABLE T) {
   _TRACE_S1_i[pos] = _TRACE_S2_j[pos] = _TRACE_COMP[pos] = 0;
   // reverse
   rev_str(_TRACE_S1_i), rev_str(_TRACE_S2_j), rev_str(_TRACE_COMP);
+}
+
+
+void *trace_local(TABLE T) {
+  _MATCHES = 0, _MISMATCHES = 0, _GAPS = 0, _OPENINGS = 0;
+  _TRACE_S1_i = (char *)calloc(sizeof(char), T.rows_i + T.cols_j);
+  _TRACE_S2_j = (char *)calloc(sizeof(char), T.rows_i + T.cols_j);
+  _TRACE_COMP = (char *)calloc(sizeof(char), T.rows_i + T.cols_j);
+  int i = _OPTIMAL_I, j = _OPTIMAL_J, pos = 0, m = 0;
+  CELL *cur = &T.cell[i][j], *prev;
+  int score = MAX3(cur->S, cur->D, cur->I);
+  while ((i > 0 | j > 0) && score > 0) {
+
+    if (cur->S == score) { // substitution / diag
+      m = M(i, j);
+      m == _MATCH ? _MATCHES++ : _MISMATCHES++;
+      _TRACE_S1_i[pos] = _S1_i[i - 1];
+      _TRACE_S2_j[pos] = _S2_j[j - 1];
+      _TRACE_COMP[pos] = m == _MATCH ? '|' : ' ';
+
+      i--, j--;
+      prev = &T.cell[i][j];
+      if (cur->S == (prev->D + m)) {
+        score = prev->D;
+      } else if (cur->S == (prev->S + m)) {
+        score = prev->S;
+      } else {
+        score = prev->I;
+      }
+
+    } else if (cur->D == score) { // deletion / vert
+      _TRACE_S1_i[pos] = _S1_i[i - 1];
+      _TRACE_S2_j[pos] = '_';
+      _TRACE_COMP[pos] = ' ';
+      _GAPS++;
+
+      i--;
+      prev = &T.cell[i][j];
+
+      if (cur->D == (prev->D + _G)) {
+        score = prev->D;
+      } else if (cur->D == (prev->S + _H + _G)) {
+        score = prev->S;
+        _OPENINGS++;
+      } else {
+        score = prev->I;
+        _OPENINGS++;
+      }
+
+    } else { // insertion / zont
+      _TRACE_S1_i[pos] = '_';
+      _TRACE_S2_j[pos] = _S2_j[j - 1];
+      _TRACE_COMP[pos] = ' ';
+      _GAPS++;
+
+      j--;
+      prev = &T.cell[i][j];
+
+      if (cur->I == (prev->D + _G + _H)) {
+        score = prev->D;
+        _OPENINGS++;
+      } else if (cur->I == (prev->S + _H + _G)) {
+        score = prev->S;
+        _OPENINGS++;
+      } else {
+        score = prev->I;
+      }
+    }
+    pos++;
+    cur = prev;
+  }
+  // null terminate
+  _TRACE_S1_i[pos] = _TRACE_S2_j[pos] = _TRACE_COMP[pos] = 0;
+  // reverse
+  rev_str(_TRACE_S1_i), rev_str(_TRACE_S2_j), rev_str(_TRACE_COMP);
+}
+
+void align(TABLE T) {
+  _LOCAL ? init_local(T) : init_global(T);
+  _LOCAL ? populate_local(T) : populate_global(T);
+  _LOCAL ? trace_local(T) : trace_global(T);
+}
+
+// print_result: print to result.txt
+void print_result() {
+  FILE *f = fopen("result.txt", "w");
+  fprintf(f, "%s\n", _TRACE_S1_i);
+  fprintf(f, "%s\n", _TRACE_COMP);
+  fprintf(f, "%s\n", _TRACE_S2_j);
+  fprintf(f, "%s optimal score: %d\n", _LOCAL ? "Local" : "Global",
+          _OPTIMAL_SCORE);
+  fclose(f);
 }
 
 // debug_print: prettyish print to csv file
