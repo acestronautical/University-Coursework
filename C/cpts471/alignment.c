@@ -12,13 +12,13 @@ assignment.
 Dated: January, 31, 2020
 */
 
-#define SEQ1                                                                   \
-  "ACATGCTACACGTATCCGATACCCCGTAACCGATAACGATACACAGACCTCGTACGCTTGCTACAACGTACTCT" \
-  "ATAACCGAGAACGATTGACATGCCTCGTACACATGCTACACGTACTCCGAT"
+char *SEQ1 =
+    "ACATGCTACACGTATCCGATACCCCGTAACCGATAACGATACACAGACCTCGTACGCTTGCTACAAC"
+    "GTACTCTATAACCGAGAACGATTGACATGCCTCGTACACATGCTACACGTACTCCGAT";
 
-#define SEQ2                                                                   \
-  "ACATGCGACACTACTCCGATACCCCGTAACCGATAACGATACAGAGACCTCGTACGCTTGCTAATAACCGAGAA" \
-  "CGATTGACATTCCTCGTACAGCTACACGTACTCCGAT"
+char *SEQ2 = "ACATGCGACACTACTCCGATACCCCGTAACCGATAACGATACAGAGACCTCGTACGCTTGC"
+             "TAATAACCGAGAA"
+             "CGATTGACATTCCTCGTACAGCTACACGTACTCCGAT";
 
 // #define SEQ1 "ACATGCT"
 
@@ -45,7 +45,7 @@ Dated: January, 31, 2020
   })
 
 #define MAX3(a, b, c) MAX2(MAX2(a, b), c)
-#define MAX4(a, b, c, d) MAX2(MAX2(MAX2(a, b), c), d);
+#define MAX4(a, b, c, d) MAX2(MAX3(a, b, c), d);
 #define NEG_INF INT_MIN + 10000
 #pragma endregion
 
@@ -63,33 +63,42 @@ typedef struct TABLE {
 
 // GLOBALS //
 #pragma region
-// make static so not externally linked
-static int _G = 0, _H = 0, _MATCH = 0, _MISMATCH = 0, _MAX = NEG_INF;
-static char *_S1 = NULL, *_S2 = NULL;
+// make all static so not externally linked
+
+// flags
+static bool _LOCAL = false;
+// scoring
+static int _G = 0, _H = 0, _MATCH = 0, _MISMATCH = 0;
+// alignment stats
+static int _OPTIMAL_SCORE = NEG_INF, _OPTIMAL_J = NEG_INF, _OPTIMAL_I = NEG_INF,
+           _MATCHES, _MISMATCHES, _GAPS, _OPENINGS;
+// sequences
+static char *_S1_i = NULL, *_S2_j = NULL, *_TRACE_S1_i = NULL,
+            *_TRACE_S2_j = NULL, *_TRACE_COMP = NULL;
 #pragma endregion
 
 // FORWARD DECLARE FUNCTIONS //
 #pragma region
-char *set_S1(char *s1);
-char *S1(void);
-char *set_S2(char *s2);
-char *S2(void);
-int set_H(const int h);
-int H(void);
-int set_G(const int g);
-int G(void);
-int set_MATCH(int match);
-int MATCH(void);
-int set_MISMATCH(int mismatch);
-int MISMATCH(void);
+char *set_S1(char *);
+char *set_S2(char *);
+bool set_LOCAL(bool);
+int set_H(const int);
+int set_G(const int);
+int set_MATCH(int);
+int set_MISMATCH(int);
+int OPTIMAL(void);
+int MATCHES(void);
+int MISMATCHES(void);
+int GAPS(void);
+int OPENINGS(void);
 int M(int, int);
-
-bool readin_strings(char **, char **);
+void rev_str(char *);
 bool allocate_table(TABLE *);
-bool init_global(TABLE T);
-bool init_local(TABLE T);
-bool populate_global(TABLE T);
-bool populate_local(TABLE T);
+bool init_global(TABLE);
+bool init_local(TABLE);
+bool populate_global(TABLE);
+bool populate_local(TABLE);
+void *trace_global(TABLE);
 void debug_print(TABLE);
 #pragma endregion
 
@@ -97,14 +106,21 @@ void debug_print(TABLE);
 #pragma region
 int main(int argc, char const *argv[]) {
   TABLE T;
-  bool local = false;
+  set_LOCAL(false);
   set_S1(SEQ1), set_S2(SEQ2);
   set_MATCH(1), set_MISMATCH(-2), set_G(-2), set_H(-5);
-  T.rows_i = strlen(S1()) + 1, T.cols_j = strlen(S2()) + 1;
   allocate_table(&T) ?: (puts("fail to allocate memory\n"), exit(1));
-  local ? init_local(T) : init_global(T);
-  local ? populate_local(T) : populate_global(T);
+  _LOCAL ? init_local(T) : init_global(T);
+  _LOCAL ? populate_local(T) : populate_global(T);
   debug_print(T);
+  trace_global(T);
+  FILE *f = fopen("result.txt", "w");
+  fprintf(f, "%s\n", _TRACE_S1_i);
+  fprintf(f, "%s\n", _TRACE_COMP);
+  fprintf(f, "%s\n", _TRACE_S2_j);
+  fprintf(f, "%s optimal score: %d\n", _LOCAL ? "Local" : "Global",
+          _OPTIMAL_SCORE);
+  fclose(f);
   return 0;
 }
 #pragma endregion
@@ -115,38 +131,46 @@ int main(int argc, char const *argv[]) {
 // global setters/getters
 
 // Sequences
-char *set_S1(char *s1) { return _S1 = s1; }
-char *S1(void) { return _S1; }
+char *set_S1(char *s1) { return _S1_i = s1; }
+char *set_S2(char *s2) { return _S2_j = s2; }
 
-char *set_S2(char *s2) { return _S2 = s2; }
-char *S2(void) { return _S2; }
+// Flags
+bool set_LOCAL(bool local) { return _LOCAL = local; }
 
 // Scoring
-int set_MAX(const int max) { return _MAX = max; }
-int MAX(void) { return _MAX; }
-
 int set_H(const int h) { return _H = h; }
-int H(void) { return _H; }
-
 int set_G(const int g) { return _G = g; }
-int G(void) { return _G; }
-
 int set_MATCH(int match) { return _MATCH = match; }
-int MATCH(void) { return _MATCH; }
-
 int set_MISMATCH(int mismatch) { return _MISMATCH = mismatch; }
-int MISMATCH(void) { return _MISMATCH; }
 
+// Stats
+int OPTIMAL(void) { return _OPTIMAL_SCORE; }
+int MATCHES(void) { return _MATCHES; }
+int MISMATCHES(void) { return _MISMATCHES; }
+int GAPS(void) { return _GAPS; }
+int OPENINGS(void) { return _OPENINGS; }
+
+// M: calculate match or not match score off a table index
 int M(int i, int j) {
-  char a = S1()[i - 1];
-  char b = S2()[j - 1];
-  return a == b ? MATCH() : MISMATCH();
+  char a = _S1_i[i - 1];
+  char b = _S2_j[j - 1];
+  return a == b ? _MATCH : _MISMATCH;
 };
 
-
+// rev_str: reverse string in place, excerpted from SO because i've written this
+// function so many times
+void rev_str(char *s) {
+  char t, *e = s + strlen(s);
+  while (--e > s) {
+    t = *s;
+    *s++ = *e;
+    *e = t;
+  }
+}
 
 // allocate_table: dynamically allocate 2D array
 bool allocate_table(TABLE *T) {
+  T->rows_i = strlen(_S1_i) + 1, T->cols_j = strlen(_S2_j) + 1;
   if (!(T->cell = (CELL **)malloc(T->rows_i * sizeof(CELL *))))
     return false;
   for (int i = 0; i < T->rows_i; i++)
@@ -166,12 +190,12 @@ bool init_global(TABLE T) {
 
   for (int i = 1; i < T.rows_i; i++) {
     T.cell[i][0].S = T.cell[i][0].I = NEG_INF;
-    T.cell[i][0].D = H() + (i * G());
+    T.cell[i][0].D = _H + (i * _G);
   }
 
   for (int j = 1; j < T.cols_j; j++) {
     T.cell[0][j].S = T.cell[0][j].D = NEG_INF;
-    T.cell[0][j].I = H() + (j * G());
+    T.cell[0][j].I = _H + (j * _G);
   }
 }
 
@@ -205,12 +229,15 @@ bool populate_global(TABLE T) {
       cur->S = MAX3(diag->S, diag->D, diag->I) + M(i, j);
 
       vert = &T.cell[i - 1][j];
-      cur->D = MAX3(vert->D + G(), vert->S + H() + G(), vert->I + H() + G());
+      cur->D = MAX3(vert->D + _G, vert->S + _H + _G, vert->I + _H + _G);
 
       zont = &T.cell[i][j - 1];
-      cur->I = MAX3(zont->I + G(), zont->S + H() + G(), zont->D + H() + G());
+      cur->I = MAX3(zont->I + _G, zont->S + _H + _G, zont->D + _H + _G);
     }
   }
+  // Set last cell to be the optimal for global alignment
+  int o = MAX3(cur->D, cur->I, cur->S);
+  _OPTIMAL_SCORE = o, _OPTIMAL_I = T.rows_i - 1, _OPTIMAL_J = T.cols_j - 1;
 }
 
 // populate_local:
@@ -227,12 +254,90 @@ bool populate_local(TABLE T) {
       cur->S = MAX2(MAX3(diag->S, diag->D, diag->I) + M(i, j), 0);
 
       vert = &T.cell[i - 1][j];
-      cur->D = MAX4(vert->D + G(), vert->S + H() + G(), vert->I + H() + G(), 0);
+      cur->D = MAX4(vert->D + _G, vert->S + _H + _G, vert->I + _H + _G, 0);
 
       zont = &T.cell[i][j - 1];
-      cur->I = MAX4(zont->I + G(), zont->S + H() + G(), zont->D + H() + G(), 0);
+      cur->I = MAX4(zont->I + _G, zont->S + _H + _G, zont->D + _H + _G, 0);
+
+      int o = MAX4(cur->D, cur->I, cur->S, _OPTIMAL_SCORE);
+      if (o > _OPTIMAL_SCORE)
+        _OPTIMAL_SCORE = o, _OPTIMAL_I = i, _OPTIMAL_J = j;
     }
   }
+}
+
+void *trace_global(TABLE T) {
+  _MATCHES = 0, _MISMATCHES = 0, _GAPS = 0, _OPENINGS = 0;
+  _TRACE_S1_i = (char *)calloc(sizeof(char), T.rows_i + T.cols_j);
+  _TRACE_S2_j = (char *)calloc(sizeof(char), T.rows_i + T.cols_j);
+  _TRACE_COMP = (char *)calloc(sizeof(char), T.rows_i + T.cols_j);
+  int i = T.rows_i - 1, j = T.cols_j - 1, pos = 0, m = 0;
+  CELL *cur = &T.cell[i][j], *prev;
+  int score = MAX3(cur->S, cur->D, cur->I);
+  while (i > 0 | j > 0) {
+
+    if (cur->S == score) { // substitution / diag
+      m = M(i, j);
+      m == _MATCH ? _MATCHES++ : _MISMATCHES++;
+      _TRACE_S1_i[pos] = _S1_i[i - 1];
+      _TRACE_S2_j[pos] = _S2_j[j - 1];
+      _TRACE_COMP[pos] = m == _MATCH ? '|' : ' ';
+
+      i--, j--;
+      prev = &T.cell[i][j];
+      if (cur->S == (prev->D + m)) {
+        score = prev->D;
+      } else if (cur->S == (prev->S + m)) {
+        score = prev->S;
+      } else {
+        score = prev->I;
+      }
+
+    } else if (cur->D == score) { // deletion / vert
+      _TRACE_S1_i[pos] = _S1_i[i - 1];
+      _TRACE_S2_j[pos] = '_';
+      _TRACE_COMP[pos] = ' ';
+      _GAPS++;
+
+      i--;
+      prev = &T.cell[i][j];
+
+      if (cur->D == (prev->D + _G)) {
+        score = prev->D;
+      } else if (cur->D == (prev->S + _H + _G)) {
+        score = prev->S;
+        _OPENINGS++;
+      } else {
+        score = prev->I;
+        _OPENINGS++;
+      }
+
+    } else { // insertion / zont
+      _TRACE_S1_i[pos] = '_';
+      _TRACE_S2_j[pos] = _S2_j[j -1 ];
+      _TRACE_COMP[pos] = ' ';
+      _GAPS++;
+
+      j--;
+      prev = &T.cell[i][j];
+
+      if (cur->I == (prev->D + _G + _H)) {
+        score = prev->D;
+        _OPENINGS++;
+      } else if (cur->I == (prev->S + _H + _G)) {
+        score = prev->S;
+        _OPENINGS++;
+      } else {
+        score = prev->I;
+      }
+    }
+    pos++;
+    cur = prev;
+  }
+  // null terminate
+  _TRACE_S1_i[pos] = _TRACE_S2_j[pos] = _TRACE_COMP[pos] = 0;
+  // reverse
+  rev_str(_TRACE_S1_i), rev_str(_TRACE_S2_j), rev_str(_TRACE_COMP);
 }
 
 // debug_print: prettyish print to csv file
@@ -243,13 +348,13 @@ void debug_print(TABLE T) {
 
   for (int j = 0; j < T.cols_j; j++)
     if (j != 0)
-      fprintf(f, "%-*c|", 15, S2()[j - 1]);
+      fprintf(f, "%-*c|", 15, _S2_j[j - 1]);
     else
       fprintf(f, "%-*c|", 15, '0');
 
   for (int i = 0; i < T.rows_i; i++) {
     if (i != 0)
-      fprintf(f, "\n\n%c |", S1()[i - 1]);
+      fprintf(f, "\n\n%c |", _S1_i[i - 1]);
     else
       fprintf(f, "\n%c |", '0');
 
