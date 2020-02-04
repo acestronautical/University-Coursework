@@ -5,6 +5,7 @@ Assignment: Programming Project 1
 Name: Cassidy, Ace
 
 https://gcc.gnu.org/onlinedocs/gcc-4.9.2/gcc/Typeof.html#Typeof
+https://stackoverflow.com/questions/3161054/static-and-external-variables
 
 
 I certify that I have listed above all the sources that I consulted regarding
@@ -24,11 +25,12 @@ Dated: January, 31, 2020
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/stat.h>
 #pragma endregion
 
 // MACROS //
 #pragma region
-// typeof safety https://gcc.gnu.org/onlinedocs/gcc-4.9.2/gcc/Typeof.html#Typeof
+// typeof safety
 #define MAX2(a, b)                                                             \
   ({                                                                           \
     __typeof__(a) _a = (a);                                                    \
@@ -37,7 +39,8 @@ Dated: January, 31, 2020
   })
 #define MAX3(a, b, c) MAX2(MAX2(a, b), c)
 #define MAX4(a, b, c, d) MAX2(MAX3(a, b, c), d);
-#define NEG_INF INT_MIN + 10000
+// add a bit to prevent underflow
+#define NEG_INF INT_MIN + 1000
 #pragma endregion
 
 // TYPES //
@@ -54,57 +57,77 @@ typedef struct TABLE {
 
 // GLOBALS //
 #pragma region
-// make all static so not externally linked
-
-char *SEQ1 =
-    "ACATGCTACACGTATCCGATACCCCGTAACCGATAACGATACACAGACCTCGTACGCTTGCTACAAC"
-    "GTACTCTATAACCGAGAACGATTGACATGCCTCGTACACATGCTACACGTACTCCGAT";
-
-char *SEQ2 = "ACATGCGACACTACTCCGATACCCCGTAACCGATAACGATACAGAGACCTCGTACGCTTGC"
-             "TAATAACCGAGAACGATTGACATTCCTCGTACAGCTACACGTACTCCGAT";
-
+// make static so not externally linked
 // flags
-static bool _LOCAL = false;
+static bool LOCAL = false;
 // scoring
-static int _G = 0, _H = 0, _MATCH = 0, _MISMATCH = 0;
+static int GAP = 0, OPEN = 0, MATCH = 0, MISMATCH = 0;
 // alignment stats
-static int _OPTIMAL_SCORE = NEG_INF, _OPTIMAL_J = NEG_INF, _OPTIMAL_I = NEG_INF,
-           _MATCHES, _MISMATCHES, _GAPS, _OPENINGS;
+static int OPTIMAL = NEG_INF, OPTIMAL_J = NEG_INF, OPTIMAL_I = NEG_INF,
+           NMATCHES, NMISMATCHES, NGAPS, NOPENINGS;
 // sequences
-static char *_S1_i = NULL, *_S2_j = NULL, *_TRACE_S1_i = NULL,
-            *_TRACE_S2_j = NULL, *_TRACE_COMP = NULL;
+static char *S1_i = NULL, *S2_j = NULL, *TRACE_S1 = NULL, *TRACE_S2 = NULL,
+            *TRACE_COMPARE = NULL;
 #pragma endregion
 
 // FUNCTIONS //
 #pragma region
-
 // global setters/getters
-
 // Sequences
-char *set_S1(char *s1) { return _S1_i = s1; }
-char *set_S2(char *s2) { return _S2_j = s2; }
+char *set_S1(char *s1) { return S1_i = s1; }
+char *set_S2(char *s2) { return S2_j = s2; }
 
 // Flags
-bool set_LOCAL(bool local) { return _LOCAL = local; }
+bool set_LOCAL(bool local) { return LOCAL = local; }
 
 // Scoring
-int set_H(const int h) { return _H = h; }
-int set_G(const int g) { return _G = g; }
-int set_MATCH(int match) { return _MATCH = match; }
-int set_MISMATCH(int mismatch) { return _MISMATCH = mismatch; }
+int set_OPEN(const int open) { return OPEN = open; }
+int set_GAP(const int gap) { return GAP = gap; }
+int set_MATCH(int match) { return MATCH = match; }
+int set_MISMATCH(int mismatch) { return MISMATCH = mismatch; }
 
 // Stats
-int OPTIMAL(void) { return _OPTIMAL_SCORE; }
-int MATCHES(void) { return _MATCHES; }
-int MISMATCHES(void) { return _MISMATCHES; }
-int GAPS(void) { return _GAPS; }
-int OPENINGS(void) { return _OPENINGS; }
+int OPTIMAL_SCORE(void) { return OPTIMAL; }
+int MATCHES(void) { return NMATCHES; }
+int MISMATCHES(void) { return NMISMATCHES; }
+int GAPS(void) { return NGAPS; }
+int OPENINGS(void) { return NOPENINGS; }
 
-// M: calculate match or not match score off a table index
-int M(int i, int j) {
-  char a = _S1_i[i - 1];
-  char b = _S2_j[j - 1];
-  return a == b ? _MATCH : _MISMATCH;
+// read_SEQS: parse the given file for the first two sequence found
+bool read_SEQS(FILE *f) {
+  char s[2000];
+  fseek(f, 0L, SEEK_END);
+  int sz = ftell(f);
+  rewind(f);
+  char *s1 = (char *)calloc(sizeof(char), sz);
+  char *s2 = (char *)calloc(sizeof(char), sz);
+  for (int i = 0; i < 3; i++) {
+    while (fgets(s, 2000, f)) {
+      if (s[0] == '>')
+        break;
+      if (s[strlen(s) - 1] == '\n')
+        s[strlen(s) - 1] = 0;
+      if (i == 1)
+        strcat(s1, s);
+      else if (i == 2) {
+        strcat(s2, s);
+      }
+      if (i == 2 && strlen(s) == 0)
+        break;
+    }
+  }
+  if (strlen(s1) == 0 || strlen(s2) == 0)
+    return false;
+  set_S1(s1);
+  set_S2(s2);
+  return true;
+}
+
+// M: calculate match or  mismatch from table indices
+int matchness(int i, int j) {
+  char a = S1_i[i - 1];
+  char b = S2_j[j - 1];
+  return a == b ? MATCH : MISMATCH;
 };
 
 // rev_str: reverse string in place
@@ -119,7 +142,7 @@ void rev_str(char *s) {
 
 // allocate_table: dynamically allocate 2D array
 bool allocate_table(TABLE *T) {
-  T->rows_i = strlen(_S1_i) + 1, T->cols_j = strlen(_S2_j) + 1;
+  T->rows_i = strlen(S1_i) + 1, T->cols_j = strlen(S2_j) + 1;
   if (!(T->cell = (CELL **)malloc(T->rows_i * sizeof(CELL *))))
     return false;
   for (int i = 0; i < T->rows_i; i++)
@@ -139,12 +162,12 @@ bool init_global(TABLE T) {
 
   for (int i = 1; i < T.rows_i; i++) {
     T.cell[i][0].S = T.cell[i][0].I = NEG_INF;
-    T.cell[i][0].D = _H + (i * _G);
+    T.cell[i][0].D = OPEN + (i * GAP);
   }
 
   for (int j = 1; j < T.cols_j; j++) {
     T.cell[0][j].S = T.cell[0][j].D = NEG_INF;
-    T.cell[0][j].I = _H + (j * _G);
+    T.cell[0][j].I = OPEN + (j * GAP);
   }
 }
 
@@ -175,18 +198,18 @@ bool populate_global(TABLE T) {
       cur = &T.cell[i][j];
 
       diag = &T.cell[i - 1][j - 1];
-      cur->S = MAX3(diag->S, diag->D, diag->I) + M(i, j);
+      cur->S = MAX3(diag->S, diag->D, diag->I) + matchness(i, j);
 
       vert = &T.cell[i - 1][j];
-      cur->D = MAX3(vert->D + _G, vert->S + _H + _G, vert->I + _H + _G);
+      cur->D = MAX3(vert->D + GAP, vert->S + OPEN + GAP, vert->I + OPEN + GAP);
 
       zont = &T.cell[i][j - 1];
-      cur->I = MAX3(zont->I + _G, zont->S + _H + _G, zont->D + _H + _G);
+      cur->I = MAX3(zont->I + GAP, zont->S + OPEN + GAP, zont->D + OPEN + GAP);
     }
   }
   // Set last cell to be the optimal for global alignment
   int o = MAX3(cur->D, cur->I, cur->S);
-  _OPTIMAL_SCORE = o, _OPTIMAL_I = T.rows_i - 1, _OPTIMAL_J = T.cols_j - 1;
+  OPTIMAL = o, OPTIMAL_I = T.rows_i - 1, OPTIMAL_J = T.cols_j - 1;
 }
 
 // populate_local:
@@ -200,88 +223,86 @@ bool populate_local(TABLE T) {
       cur = &T.cell[i][j];
 
       diag = &T.cell[i - 1][j - 1];
-      cur->S = MAX2(MAX3(diag->S, diag->D, diag->I) + M(i, j), 0);
+      cur->S = MAX2(MAX3(diag->S, diag->D, diag->I) + matchness(i, j), 0);
 
       vert = &T.cell[i - 1][j];
-      cur->D = MAX4(vert->D + _G, vert->S + _H + _G, vert->I + _H + _G, 0);
+      cur->D =
+          MAX4(vert->D + GAP, vert->S + OPEN + GAP, vert->I + OPEN + GAP, 0);
 
       zont = &T.cell[i][j - 1];
-      cur->I = MAX4(zont->I + _G, zont->S + _H + _G, zont->D + _H + _G, 0);
+      cur->I =
+          MAX4(zont->I + GAP, zont->S + OPEN + GAP, zont->D + OPEN + GAP, 0);
 
-      int o = MAX4(cur->D, cur->I, cur->S, _OPTIMAL_SCORE);
-      if (o > _OPTIMAL_SCORE)
-        _OPTIMAL_SCORE = o, _OPTIMAL_I = i, _OPTIMAL_J = j;
+      int o = MAX4(cur->D, cur->I, cur->S, OPTIMAL);
+      if (o > OPTIMAL)
+        OPTIMAL = o, OPTIMAL_I = i, OPTIMAL_J = j;
     }
   }
 }
 
+// trace: retrace the optimal alignment
 void *trace(TABLE T) {
-  _MATCHES = 0, _MISMATCHES = 0, _GAPS = 0, _OPENINGS = 0;
-  _TRACE_S1_i = (char *)calloc(sizeof(char), T.rows_i + T.cols_j);
-  _TRACE_S2_j = (char *)calloc(sizeof(char), T.rows_i + T.cols_j);
-  _TRACE_COMP = (char *)calloc(sizeof(char), T.rows_i + T.cols_j);
+  NMATCHES = 0, NMISMATCHES = 0, NGAPS = 0, NOPENINGS = 0;
+  TRACE_S1 = (char *)calloc(sizeof(char), T.rows_i + T.cols_j);
+  TRACE_S2 = (char *)calloc(sizeof(char), T.rows_i + T.cols_j);
+  TRACE_COMPARE = (char *)calloc(sizeof(char), T.rows_i + T.cols_j);
   int i, j, pos = 0, m = 0;
-  if (_LOCAL)
-    i = _OPTIMAL_I, j = _OPTIMAL_J;
+
+  if (LOCAL)
+    i = OPTIMAL_I, j = OPTIMAL_J;
   else
     i = T.rows_i - 1, j = T.cols_j - 1;
 
   CELL *cur = &T.cell[i][j], *prev;
   int score = MAX3(cur->S, cur->D, cur->I);
   while (i > 0 | j > 0) {
-    if (_LOCAL && score <= 0)
+    if (LOCAL && score <= 0)
       break;
     if (cur->S == score) { // substitution / diag
-      m = M(i, j);
-      m == _MATCH ? _MATCHES++ : _MISMATCHES++;
-      _TRACE_S1_i[pos] = _S1_i[i - 1];
-      _TRACE_S2_j[pos] = _S2_j[j - 1];
-      _TRACE_COMP[pos] = m == _MATCH ? '|' : ' ';
+      m = matchness(i, j);
+      m == MATCH ? NMATCHES++ : NMISMATCHES++;
+      TRACE_S1[pos] = S1_i[i - 1];
+      TRACE_S2[pos] = S2_j[j - 1];
+      TRACE_COMPARE[pos] = m == MATCH ? '|' : ' ';
 
       i--, j--;
       prev = &T.cell[i][j];
-      if (cur->S == (prev->D + m)) {
-        score = prev->D;
-      } else if (cur->S == (prev->S + m)) {
-        score = prev->S;
-      } else {
-        score = prev->I;
-      }
+      score = MAX3(prev->D, prev->S, prev->I);
 
     } else if (cur->D == score) { // deletion / vert
-      _TRACE_S1_i[pos] = _S1_i[i - 1];
-      _TRACE_S2_j[pos] = '_';
-      _TRACE_COMP[pos] = ' ';
-      _GAPS++;
+      TRACE_S1[pos] = S1_i[i - 1];
+      TRACE_S2[pos] = '_';
+      TRACE_COMPARE[pos] = ' ';
+      NGAPS++;
 
       i--;
       prev = &T.cell[i][j];
 
-      if (cur->D == (prev->D + _G)) {
+      if (cur->D == (prev->D + GAP)) {
         score = prev->D;
-      } else if (cur->D == (prev->S + _H + _G)) {
+      } else if (cur->D == (prev->S + OPEN + GAP)) {
         score = prev->S;
-        _OPENINGS++;
+        NOPENINGS++;
       } else {
         score = prev->I;
-        _OPENINGS++;
+        NOPENINGS++;
       }
 
     } else { // insertion / zont
-      _TRACE_S1_i[pos] = '_';
-      _TRACE_S2_j[pos] = _S2_j[j - 1];
-      _TRACE_COMP[pos] = ' ';
-      _GAPS++;
+      TRACE_S1[pos] = '_';
+      TRACE_S2[pos] = S2_j[j - 1];
+      TRACE_COMPARE[pos] = ' ';
+      NGAPS++;
 
       j--;
       prev = &T.cell[i][j];
 
-      if (cur->I == (prev->D + _G + _H)) {
+      if (cur->I == (prev->D + GAP + OPEN)) {
         score = prev->D;
-        _OPENINGS++;
-      } else if (cur->I == (prev->S + _H + _G)) {
+        NOPENINGS++;
+      } else if (cur->I == (prev->S + OPEN + GAP)) {
         score = prev->S;
-        _OPENINGS++;
+        NOPENINGS++;
       } else {
         score = prev->I;
       }
@@ -290,26 +311,41 @@ void *trace(TABLE T) {
     cur = prev;
   }
   // null terminate
-  _TRACE_S1_i[pos] = _TRACE_S2_j[pos] = _TRACE_COMP[pos] = 0;
+  TRACE_S1[pos] = TRACE_S2[pos] = TRACE_COMPARE[pos] = 0;
   // reverse
-  rev_str(_TRACE_S1_i), rev_str(_TRACE_S2_j), rev_str(_TRACE_COMP);
+  rev_str(TRACE_S1), rev_str(TRACE_S2), rev_str(TRACE_COMPARE);
 }
 
 void align(TABLE T) {
-  _LOCAL ? init_local(T) : init_global(T);
-  _LOCAL ? populate_local(T) : populate_global(T);
+  LOCAL ? init_local(T) : init_global(T);
+  LOCAL ? populate_local(T) : populate_global(T);
   trace(T);
 }
 
 // print_result: print to result.txt
 void print_result() {
-  FILE *f = fopen("result.txt", "w");
-  fprintf(f, "%s\n", _TRACE_S1_i);
-  fprintf(f, "%s\n", _TRACE_COMP);
-  fprintf(f, "%s\n", _TRACE_S2_j);
-  fprintf(f, "%s optimal score: %d\n", _LOCAL ? "Local" : "Global",
-          _OPTIMAL_SCORE);
-  fclose(f);
+  printf("Scoring: match = %d, mismatch = %d, open = %d, gap = %d\n\n", MATCH,
+         MISMATCH, OPEN, GAP);
+
+  printf("S1 length = %d characters\n", (int)strlen(S1_i));
+  printf("S2 length = %d characters\n\n", (int)strlen(S2_j));
+
+  char *s1 = TRACE_S1, *s2 = TRACE_S2, *sc = TRACE_COMPARE;
+  int width = 76;
+  while (*s1 && *s2 && *sc) {
+    printf("S1 %.*s\n", width, s1);
+    printf("   %.*s\n", width, sc);
+    printf("s2 %.*s\n\n", width, s2);
+    s1 += width, s2 += width, sc += width;
+  }
+
+  printf("%s optimal score: %d\n", LOCAL ? "Local" : "Global", OPTIMAL);
+
+  printf("matches = %d, mismatches = %d, gaps = %d, opening gaps = %d\n",
+         NMATCHES, NMISMATCHES, NGAPS, NOPENINGS);
+  int len = MAX2(strlen(S1_i), strlen(S2_j));
+  printf("Identities = %d/%d (%.3lf), Gaps = %d/%d (%.3lf)\n", NMATCHES, len,
+         ((float)NMATCHES / len), NGAPS, len, ((float)NGAPS / len));
 }
 
 // debug_print: prettyish print to csv file
@@ -320,13 +356,13 @@ void debug_print(TABLE T) {
 
   for (int j = 0; j < T.cols_j; j++)
     if (j != 0)
-      fprintf(f, "%-*c|", 15, _S2_j[j - 1]);
+      fprintf(f, "%-*c|", 15, S2_j[j - 1]);
     else
       fprintf(f, "%-*c|", 15, '0');
 
   for (int i = 0; i < T.rows_i; i++) {
     if (i != 0)
-      fprintf(f, "\n\n%c |", _S1_i[i - 1]);
+      fprintf(f, "\n\n%c |", S1_i[i - 1]);
     else
       fprintf(f, "\n%c |", '0');
 
