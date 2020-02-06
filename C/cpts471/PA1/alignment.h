@@ -343,7 +343,7 @@ void print_result() {
 
   printf("matches = %d, mismatches = %d, gaps = %d, opening gaps = %d\n",
          NMATCHES, NMISMATCHES, NGAPS, NOPENINGS);
-  int len = MAX2(strlen(S1_i), strlen(S2_j));
+  int len = strlen(TRACE_COMPARE);;
   printf("Identities = %d/%d (%.3lf), Gaps = %d/%d (%.3lf)\n", NMATCHES, len,
          ((float)NMATCHES / len), NGAPS, len, ((float)NGAPS / len));
 }

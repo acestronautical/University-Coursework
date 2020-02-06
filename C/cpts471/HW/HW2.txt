@@ -1,0 +1,76 @@
+Ace Cassidy                                                             CPTS471
+Homework 2                                                              Fall' 20
+
+PROBLEM 1
+Consider global alignment with affine gap penalty function.  Let the scoring 
+scheme parameters be as follows:  
+
+match score (ma) = +1; mismatch penalty (mi) = -2; gap opening penalty (h) = -5; 
+gap extension penalty (g) = -1.
+
+RESPONSE
+A1 Scoring:
+ a   c   c   a   t   t   t   t   a   -   g   -   g   -   c   t   c 
+ |   |       |       |       |   |       |       |       |   |   | 
+ a   c   g   a   -   t   -   t   a   g   g   g   g   g   c   t   c 
++1  +1  -2  +1  -6  +1  -6  +1  +1  -6  +1  -6  +1  -6  +1  +1  +1 
+    = -21
+ 
+A2 Scoring:
+ a   c   c   a   t   t   t   t   a   -   -   -   g   g   c   t   c
+ |   |       |           |   |   |               |   |   |   |   |
+ a   c   g   a   -   -   t   t   a   g   g   g   g   g   c   t   c
++1  +1  -2  +1  -6  -1  +1  +1  +1  -6  -1  -1  +1  +1  +1  +1  +1
+    = -6
+   
+PROBLEM 2 
+For s1 and s2, let OPTS1(s1, s2) denote an optimal global alignment path
+reported using the scoring scheme 
+
+(S1):ma=x,mi=y and g=z, for some arbitrary integers x >0, y <0 and z <0. 
+
+Now consider the following two modified scoring schemes:
+
+(S2):ma=x∗d,mi=y∗d, and g=z∗d, where d >0;
+(S3):ma=x+d,mi=y+d, andg=z+d, whered >0;
+
+For s1 and s2, how would the optimal alignment paths computed under scoring 
+schemes S2 and S3 individually compare with OPTS1(s1, s2)? Are they guaranteed 
+to be the same as OPTS1(s1, s2) or could they differ from OPTS1(s1, s2)? 
+Justify your answers. For simplicity, assume that the two strings are such that 
+there exists only one unique optimal path under each of three scoring schemes.
+PS: Note that the emphasis on this question is on the optimal path and not the 
+score itself, as the latter will obviously change with any change in the scoring
+scheme.
+
+RESPONSE
+Observe that an arbitrary global alignment obeys the following:
+
+alignment score = optimal( a*ma + b*mi + c*g )
+alignment length = a + b + c
+
+where optimal() finds the optimal a, b, and c which obey the alignment length
+and alignment rules (global alignment)
+
+In order for an alignment to be invariant from one scoring scheme to another the
+quantities a, b, and c must remain unchanged (the number of gaps, matches, and 
+mismatches cannot change) while still giving the maximal score. 
+
+For S2 observe:
+
+alignment score = optimal(  a*(x*d) + b*(y*d) + c*(z*d))
+                = optimal(( a*x + b*y + c*z) * d )
+                = optimal(  a*x + b*y + c*z) ) * d
+
+The variable d is not involved in computing the values for a, b, and c but only
+acts a scale factor for the alignment score, and so S2 reduces to S1
+
+For S3 observe:
+
+alignment score = optimal(  a*(x+d) + b*(y+d) + c*(z+d))
+                = optimal(( a*x + a*d + b*y + b*d + c*z + c*d))
+                = optimal(( a*x + a*d + b*y + b*d + c*z + c*d))
+
+There is no way to equate this to scheme S1 or S2, and so we assume that the
+there exists some sequence for which a,b, c are different under S3 than under
+S1 or S2
