@@ -124,7 +124,7 @@ bool read_SEQS(FILE *f) {
 }
 
 // M: calculate match or  mismatch from table indices
-int matchness(int i, int j) {
+int matchiness(int i, int j) {
   char a = S1_i[i - 1];
   char b = S2_j[j - 1];
   return a == b ? MATCH : MISMATCH;
@@ -192,23 +192,23 @@ bool init_local(TABLE T) {
 // D(i, j)= MAX( D(i-1, j) + g, S(i-1, j) + h + g, I(i-1, j) + h + g )
 // I(i, j)= MAX( I(i, j-1) + g, S(i, j-1) + h + g, D(i, j-1) + h + g )
 bool populate_global(TABLE T) {
-  CELL *cur, *zont, *diag, *vert;
+  CELL *curt, *zont, *diag, *vert;
   for (int i = 1; i < T.rows_i; i++) {
     for (int j = 1; j < T.cols_j; j++) {
-      cur = &T.cell[i][j];
+      curt = &T.cell[i][j];
 
       diag = &T.cell[i - 1][j - 1];
-      cur->S = MAX3(diag->S, diag->D, diag->I) + matchness(i, j);
+      curt->S = MAX3(diag->S, diag->D, diag->I) + matchiness(i, j);
 
       vert = &T.cell[i - 1][j];
-      cur->D = MAX3(vert->D + GAP, vert->S + OPEN + GAP, vert->I + OPEN + GAP);
+      curt->D = MAX3(vert->D + GAP, vert->S + OPEN + GAP, vert->I + OPEN + GAP);
 
       zont = &T.cell[i][j - 1];
-      cur->I = MAX3(zont->I + GAP, zont->S + OPEN + GAP, zont->D + OPEN + GAP);
+      curt->I = MAX3(zont->I + GAP, zont->S + OPEN + GAP, zont->D + OPEN + GAP);
     }
   }
   // Set last cell to be the optimal for global alignment
-  int o = MAX3(cur->D, cur->I, cur->S);
+  int o = MAX3(curt->D, curt->I, curt->S);
   OPTIMAL = o, OPTIMAL_I = T.rows_i - 1, OPTIMAL_J = T.cols_j - 1;
 }
 
@@ -223,7 +223,7 @@ bool populate_local(TABLE T) {
       cur = &T.cell[i][j];
 
       diag = &T.cell[i - 1][j - 1];
-      cur->S = MAX2(MAX3(diag->S, diag->D, diag->I) + matchness(i, j), 0);
+      cur->S = MAX2(MAX3(diag->S, diag->D, diag->I) + matchiness(i, j), 0);
 
       vert = &T.cell[i - 1][j];
       cur->D =
@@ -259,7 +259,7 @@ void *trace(TABLE T) {
     if (LOCAL && score <= 0)
       break;
     if (cur->S == score) { // substitution / diag
-      m = matchness(i, j);
+      m = matchiness(i, j);
       m == MATCH ? NMATCHES++ : NMISMATCHES++;
       TRACE_S1[pos] = S1_i[i - 1];
       TRACE_S2[pos] = S2_j[j - 1];
