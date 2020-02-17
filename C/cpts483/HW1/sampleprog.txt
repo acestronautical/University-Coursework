@@ -1,0 +1,6 @@
+Tensor A[3][4];
+Tensor B[4][5];
+Tensor C[3][5];
+Tensor D[3][5];
+Tensor E[3][5];
+D = C + A*B;

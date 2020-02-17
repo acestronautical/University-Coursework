@@ -29,9 +29,9 @@
 
  /* Trash */
 "//".*  
-[ \t]   /* ignore white space */ 
-\\\n    printf("c> "); /* ignore line continuation */
-"\n"    { return EOL; }
+[ \t\n]   /* ignore white space */ 
+\\\n    /* ignore line continuation */
+<<EOF>>                    { yyterminate(); }
+. { yyerror((char*)"dont know what to do %c\n", *yytext); }
 
-.	{ yyerror("Trash character %c\n", *yytext); }
 %%

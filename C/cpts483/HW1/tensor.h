@@ -22,13 +22,14 @@ symbol symtab[NHASH];
 symbol *lookup(char *);
 
 /* list of nums */
-typedef struct numlist {
-  int num;
-  struct numlist *next;
-} numlist;
+typedef struct intlist {
+  int* arr;
+  int len;
+  int cap;
+} intlist;
 
-numlist *newnumlist(int dim, numlist *next);
-void numlistfree(numlist *dl);
+intlist *newintlist(int num, intlist *l);
+void intlistfree(intlist *l);
 
 /* node types
  *  + *
@@ -48,7 +49,7 @@ typedef struct node {
 typedef struct symref {
   int nodetype; /* type R */
   symbol *s;
-  numlist *dl;
+  intlist *l;
 } symref;
 
 typedef struct symasgn {
@@ -59,8 +60,10 @@ typedef struct symasgn {
 
 /* build an AST */
 node *newast(int nodetype, node *l, node *r);
-node *newref(symbol *s, numlist *dl);
+node *newdec(symbol *s, intlist *l);
 node *newasgn(symbol *s, node *v);
+node *newinit(symbol *s, intlist *l);
+node *newref(symbol *s);
 
 /* evaluate an AST */
 tensor *eval(node *);
