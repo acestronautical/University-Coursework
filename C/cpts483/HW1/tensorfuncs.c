@@ -122,7 +122,7 @@ tensor tDec(tensor *t, intlist *l) {
   t->dims = (int *)malloc(sizeof(int) * t->ndims);
   int sz = 1;
   for (int i = 0; i < t->ndims; i++) {
-    t->dims[i] = l->arr[i];
+    t->dims[i] = l->arr[t->ndims - i -1];
     sz *= l->arr[i];
   }
   t->arr = (int *)malloc(sizeof(int) * sz);
@@ -136,16 +136,22 @@ tensor tInit(tensor *t, intlist *l) {
 tensor *tAdd(tensor *t1, tensor *t2) {
   tensor *t = (tensor *)malloc(sizeof(tensor));
   int sz = 1;
-  if (t1->ndims != t2->ndims)
+  if (t1->ndims != t2->ndims) {
+    printf("err: num dims not the same\n");
     exit(1);
+  }
   t->ndims = t1->ndims;
   t->dims = (int *)malloc(sizeof(int) * t->ndims);
   for (int i = 0; i < t1->ndims; i++) {
-    if (t1->dims[i] != t2->dims[i])
+    if (t1->dims[i] != t2->dims[i]) {
+      printf("err: val of dims not the same\n %d != %d\n", t1->dims[i],
+             t2->dims[i]);
       exit(1);
+    }
     sz *= t1->dims[i];
     t->dims[i] = t1->dims[i];
   }
+
   t->arr = (int *)malloc(sizeof(int) * sz);
   for (int i = 0; i < sz; i++) {
     t->arr[i] = t1->arr[i] + t2->arr[i];
@@ -155,17 +161,18 @@ tensor *tAdd(tensor *t1, tensor *t2) {
 
 tensor *tMul(tensor *t1, tensor *t2) {
   tensor *t = (tensor *)malloc(sizeof(tensor));
-  if (t1->ndims > 2 || t2->ndims > 2){
+  if (t1->ndims > 2 || t2->ndims > 2) {
     printf("can't multiply these dimensions\n");
     exit(1);
   }
   t->ndims = t1->ndims;
   t->dims = (int *)malloc(sizeof(int) * t->ndims);
-  t->dims[0] = t1->dims[1];
-  t->dims[1] = t2->dims[0];
+  t->dims[0] = t1->dims[0];
+  if (t->ndims >= 2)
+    t->dims[1] = t2->dims[1];
 
-  int sz =1;
- for (int i = 0; i < t->ndims; i++) 
+  int sz = 1;
+  for (int i = 0; i < t->ndims; i++)
     sz *= t->dims[i];
 
   t->arr = (int *)malloc(sizeof(int) * sz);
@@ -184,7 +191,7 @@ tensor *tMul(tensor *t1, tensor *t2) {
 }
 
 tensor *eval(node *a) {
-  tensor tens, *t = &tens;
+  tensor *t;
 
   if (!a) {
     yyerror("internal error, null eval");
@@ -197,23 +204,19 @@ tensor *eval(node *a) {
     tDec(((symref *)a)->s->tnsr, ((symref *)a)->l);
     t = ((symref *)a)->s->tnsr;
     break;
-
     /* name initialization */
   case 'I':
     tInit(((symref *)a)->s->tnsr, ((symref *)a)->l);
     t = ((symref *)a)->s->tnsr;
     break;
-
     /* name reference */
   case 'R':
     t = ((struct symref *)a)->s->tnsr;
     break;
-
     /* assignment */
   case '=':
     t = ((symasgn *)a)->s->tnsr = eval(((symasgn *)a)->v);
     break;
-
     /* expressions */
   case '+':
     t = tAdd(eval(a->l), eval(a->r));
@@ -263,7 +266,7 @@ void yyerror(char *s, ...) {
 }
 
 #ifdef YYDEBUG
-int yydebug = 1;
+int yydebug = 0;
 #endif
 int main() {
   printf("> ");
