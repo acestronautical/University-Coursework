@@ -21,19 +21,28 @@ Dated: January, 31, 2020
 // MAIN //
 #pragma region
 int main(int argc, char const *argv[]) {
-  // Arg handling
-  argc == 3 ?: (puts("Usage:<executable><file><0:global, 1:local>"), exit(1));
-  FILE *f = fopen(argv[1], "r");
-  f ?: (puts("Fail to open file"), exit(1));
+  // ARG HANDLING
+  argc >= 3 || argc <= 4  
+      ?: (puts("Usage:<executable><fasta><0:global 1:local>[config]"), exit(1));
+  // read seqs
+  FILE *f1 = fopen(argv[1], "r");
+  f1 ?: (puts("Fail to open fasta file"), exit(1));
+  read_SEQS(f1);
+  fclose(f1);
+  // set local/global
   set_LOCAL(*argv[2] == '1' ? true : false);
-  printf("Begin %s alignment\n",
-         *argv[2] == '1' ? "local" : "global");
+  // set scores
+  if (argc == 4) {
+    FILE *f2 = fopen(argv[3], "r");
+    f2 ?: (puts("Fail to open file"), exit(1));
+    read_CNFG(f2);
+    fclose(f2);
+  } else
+    set_MATCH(1), set_MISMATCH(-2), set_GAP(-2), set_OPEN(-5);
 
-  // Alignment
+  // ALIGNMENT
+  printf("Begin %s alignment\n", *argv[2] == '1' ? "local" : "global");
   TABLE T;
-  read_SEQS(f);
-  fclose(f);
-  set_MATCH(1), set_MISMATCH(-2), set_GAP(-2), set_OPEN(-5);
   allocate_table(&T) ?: (puts("fail to allocate memory\n"), exit(1));
   align(T);
   print_result();

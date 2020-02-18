@@ -93,6 +93,23 @@ int MISMATCHES(void) { return NMISMATCHES; }
 int GAPS(void) { return NGAPS; }
 int OPENINGS(void) { return NOPENINGS; }
 
+bool read_CNFG(FILE *f) {
+  char line[64], *k, *v;
+  while (fgets(line, 64, f)) {
+    k = strtok(line, " \t\n");
+    v = strtok(NULL, "\t\n");
+    if (!strcmp(k, "match")) {
+      set_MATCH(atoi(v));
+    } else if (!strcmp(k, "mismatch")) {
+      set_MISMATCH(atoi(v));
+    } else if (!strcmp(k, "h")) {
+      set_OPEN(atoi(v));
+    } else if (!strcmp(k, "g")) {
+      set_GAP(atoi(v));
+    }
+  }
+}
+
 // read_SEQS: parse the given file for the first two sequence found
 bool read_SEQS(FILE *f) {
   char s[2000];
@@ -343,7 +360,8 @@ void print_result() {
 
   printf("matches = %d, mismatches = %d, gaps = %d, opening gaps = %d\n",
          NMATCHES, NMISMATCHES, NGAPS, NOPENINGS);
-  int len = strlen(TRACE_COMPARE);;
+  int len = strlen(TRACE_COMPARE);
+  ;
   printf("Identities = %d/%d (%.3lf), Gaps = %d/%d (%.3lf)\n", NMATCHES, len,
          ((float)NMATCHES / len), NGAPS, len, ((float)NGAPS / len));
 }
