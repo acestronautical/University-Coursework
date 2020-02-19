@@ -29,3 +29,4 @@ for (int i = 0; i < 360; i++) {
 *(int *)tmp02[i] = *(int *)A[i] + *(int *)B[i];
 }
 memcpy(tmp02, C, 8);
+}

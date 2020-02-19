@@ -343,6 +343,7 @@ int yydebug = 0;
 #endif
 int main() {
   printf("void main(){\n");
-  return yyparse();
-  printf("\n}");
+  yyparse();
+  printf("}\n");
+  return 0;
 }
