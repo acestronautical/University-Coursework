@@ -7,13 +7,14 @@
 #include <stdlib.h>
 #include <string.h>
 
-static unsigned symhash(char *sym) {
-  unsigned int hash = 0;
-  unsigned c;
+const char *TMPNAME = "tmp0000";
+int AUTOID = 0;
+char IDBUF[5];
 
+static unsigned symhash(char *sym) {
+  unsigned int hash = 0, c;
   while (c = *sym++)
     hash = hash * 9 ^ c;
-
   return hash;
 }
 
@@ -28,10 +29,9 @@ symbol *lookup(char *sym) {
 
     if (!sp->name) { /* new entry */
       sp->name = strdup(sym);
-      sp->tnsr = (tensor *)malloc(sizeof(tensor));
-      sp->tnsr->arr = NULL;
-      sp->tnsr->dims = NULL;
-      sp->tnsr->ndims = 0;
+      sp->tnsr.arr = NULL;
+      sp->tnsr.dims = NULL;
+      sp->tnsr.ndims = 0;
       return sp;
     }
 
@@ -99,7 +99,8 @@ void intlistfree(intlist *l) {
   free(l);
 }
 
-void tPrint(tensor *t) {
+void tensorprint(symbol *s) {
+  tensor *t = &s->tnsr;
   if (!t | !t->arr | !t->dims | t->ndims == 0) {
     printf("//[]\n");
     return;
@@ -117,24 +118,61 @@ void tPrint(tensor *t) {
   printf("\n");
 }
 
-tensor tDec(tensor *t, intlist *l) {
+void tensordeclareprint(symbol *s, intlist *l) {
+  printf("int %s", s->name);
+  for (int i = 0; i < s->tnsr.ndims; i++)
+    printf("[%d]", s->tnsr.dims[i]);
+  printf(";\n");
+}
+
+symbol *tensordeclare(symbol *s, intlist *l) {
+  tensor *t = &s->tnsr;
   t->ndims = l->len;
   t->dims = (int *)malloc(sizeof(int) * t->ndims);
   int sz = 1;
   for (int i = 0; i < t->ndims; i++) {
-    t->dims[i] = l->arr[t->ndims - i -1];
+    t->dims[i] = l->arr[t->ndims - i - 1];
     sz *= l->arr[i];
   }
   t->arr = (int *)malloc(sizeof(int) * sz);
+  return s;
+}
+
+void tensorinitprint(symbol *s, intlist *l){
+
 };
 
-tensor tInit(tensor *t, intlist *l) {
+symbol *tensorinit(symbol *s, intlist *l) {
+  tensor *t = &s->tnsr;
   for (int i = 0; i < l->len; i++)
     t->arr[i] = l->arr[i];
+  return s;
+}
+
+void tensoraddprint(symbol *s, symbol *s1, symbol *s2) {
+  printf("int %s", s->name);
+  for (int i = 0; i < s->tnsr.ndims; i++)
+    printf("[%d]", s->tnsr.dims[i]);
+  printf(";\n");
+
+  int sz = 1;
+  for (int i = 0; i < s->tnsr.ndims; i++) {
+    sz *= s->tnsr.dims[i];
+  }
+
+  printf("for (int i = 0; i < %d; i++) {\n"
+         "*(int *)%s[i] = *(int *)%s[i] + *(int *)%s[i];"
+         "\n}\n",
+         sz, s->name, s1->name, s2->name);
 };
 
-tensor *tAdd(tensor *t1, tensor *t2) {
-  tensor *t = (tensor *)malloc(sizeof(tensor));
+symbol *tensoradd(symbol *s1, symbol *s2) {
+  symbol *s = (symbol *)malloc(sizeof(symbol));
+  s->name = strdup(TMPNAME);
+  s->name[4] = 0;
+  sprintf(IDBUF, "%d", AUTOID++);
+  strcat(s->name, IDBUF);
+  tensor *t1 = &s1->tnsr, *t2 = &s2->tnsr, *t = &s->tnsr;
   int sz = 1;
   if (t1->ndims != t2->ndims) {
     printf("err: num dims not the same\n");
@@ -156,11 +194,37 @@ tensor *tAdd(tensor *t1, tensor *t2) {
   for (int i = 0; i < sz; i++) {
     t->arr[i] = t1->arr[i] + t2->arr[i];
   }
-  return t;
+  return s;
 }
 
-tensor *tMul(tensor *t1, tensor *t2) {
-  tensor *t = (tensor *)malloc(sizeof(tensor));
+void tensormultiplyprint(symbol *s, symbol *s1, symbol *s2) {
+  printf("int %s", s->name);
+  for (int i = 0; i < s->tnsr.ndims; i++)
+    printf("[%d]", s->tnsr.dims[i]);
+  printf(";\n");
+
+  tensor *t1 = &s1->tnsr, *t2 = &s2->tnsr, *t = &s->tnsr;
+
+  printf("for (int i = 0; i < %d; i++) {\n"
+         "   for (int j = 0; j < %d; j++) {\n"
+         "     int sum = 0;\n"
+         "     for (int k = 0; k < %d; k++)\n"
+         "       sum = sum + *((int *)%s + i * %d + k) *\n"
+         "                   *((int *)%s + k * %d + j);\n"
+         "     *((int *)%s + i * %d + j) = sum;\n"
+         "   }\n"
+         " \n}\n",
+         t1->dims[0], t1->dims[1], t1->dims[0], s1->name, t1->dims[0], s2->name,
+         t2->dims[0], s->name, t->dims[0]);
+}
+
+symbol *tensormultiply(symbol *s1, symbol *s2) {
+  symbol *s = (symbol *)malloc(sizeof(symbol));
+  s->name = strdup(TMPNAME);
+  s->name[4] = 0;
+  sprintf(IDBUF, "%d", AUTOID++);
+  strcat(s->name, IDBUF);
+  tensor *t1 = &s1->tnsr, *t2 = &s2->tnsr, *t = &s->tnsr;
   if (t1->ndims > 2 || t2->ndims > 2) {
     printf("can't multiply these dimensions\n");
     exit(1);
@@ -187,47 +251,56 @@ tensor *tMul(tensor *t1, tensor *t2) {
       *(t->arr + i * t->dims[0] + j) = sum;
     }
   }
-  return t;
+  return s;
 }
 
-tensor *eval(node *a) {
-  tensor *t;
-
-  if (!a) {
-    yyerror("internal error, null eval");
-    return NULL;
-  }
-
+symbol *eval(node *a) {
+  symbol *sym, *sym1, *sym2;
   switch (a->type) {
     /* name declaration */
   case 'D':
-    tDec(((symref *)a)->s->tnsr, ((symref *)a)->l);
-    t = ((symref *)a)->s->tnsr;
+    tensordeclare(((symref *)a)->s, ((symref *)a)->l);
+    tensordeclareprint(((symref *)a)->s, ((symref *)a)->l);
+    sym = ((symref *)a)->s;
     break;
     /* name initialization */
   case 'I':
-    tInit(((symref *)a)->s->tnsr, ((symref *)a)->l);
-    t = ((symref *)a)->s->tnsr;
+    tensorinitprint(((symref *)a)->s, ((symref *)a)->l);
+    tensorinit(((symref *)a)->s, ((symref *)a)->l);
+    sym = ((symref *)a)->s;
     break;
     /* name reference */
   case 'R':
-    t = ((struct symref *)a)->s->tnsr;
+    sym = ((struct symref *)a)->s;
     break;
     /* assignment */
   case '=':
-    t = ((symasgn *)a)->s->tnsr = eval(((symasgn *)a)->v);
+    // deep copy
+    sym = eval(((symasgn *)a)->v);
+    sym1 = ((symasgn *)a)->s;
+    memcpy(sym1->tnsr.arr, sym->tnsr.arr, sizeof(sym->tnsr.arr));
+    memcpy(sym1->tnsr.dims, sym->tnsr.dims, sizeof(sym->tnsr.dims));
+    sym1->tnsr.ndims = sym->tnsr.ndims;
+    printf("memcpy(%s, %s, %d);\n", sym->name, sym1->name,
+           (int)sizeof(sym->tnsr.arr));
     break;
     /* expressions */
   case '+':
-    t = tAdd(eval(a->l), eval(a->r));
+    sym1 = eval(a->l);
+    sym2 = eval(a->r);
+    sym = tensoradd(sym1, sym2);
+    tensoraddprint(sym, sym1, sym2);
     break;
   case '*':
-    t = tMul(eval(a->l), eval(a->r));
+    sym1 = eval(a->l);
+    sym2 = eval(a->r);
+    sym = tensormultiply(sym1, sym2);
+    tensormultiplyprint(sym, sym1, sym2);
     break;
   default:
     printf("internal error: bad node %c\n", a->type);
   }
-  return t;
+  return sym;
 }
 
 void treefree(node *a) {
@@ -269,6 +342,7 @@ void yyerror(char *s, ...) {
 int yydebug = 0;
 #endif
 int main() {
-  printf("> ");
+  printf("void main(){\n");
   return yyparse();
+  printf("\n}");
 }

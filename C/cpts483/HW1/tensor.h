@@ -7,18 +7,18 @@ typedef struct tensor {
   int *dims;
   int ndims;
 } tensor;
-void tPrint(tensor *t);
 
 /* symbol table */
 typedef struct symbol { /* a variable name */
   char *name;
-  tensor *tnsr;
+  tensor tnsr;
 } symbol;
 
 /* simple symtab of fixed size */
 #define NHASH 9997
 symbol symtab[NHASH];
 
+void tensorprint(symbol *);
 symbol *lookup(char *);
 
 /* list of nums */
@@ -66,7 +66,7 @@ node *newinit(symbol *s, intlist *l);
 node *newref(symbol *s);
 
 /* evaluate an AST */
-tensor *eval(node *);
+symbol *eval(node *);
 
 /* delete and free an AST */
 void treefree(node *);

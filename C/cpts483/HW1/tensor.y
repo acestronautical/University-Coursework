@@ -54,7 +54,7 @@ dimlist:  dim             { $$ = newintlist($1, NULL); }
 
 calclist: /* nothing */
   | calclist exp ';' { 
-          tPrint(eval($2));
+          eval($2);
           treefree($2); }
   | calclist error EOL { yyerrok; printf("> "); }
  ;
