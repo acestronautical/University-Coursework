@@ -8,9 +8,9 @@
             "name": "debug",
             "type": "cppdbg",
             "request": "launch",
-            "program": "${workspaceFolder}/a.out",
+            "program": "${workspaceFolder}/align",
             "args": [
-                "input/mouse.txt",
+                "input/cancer.txt",
                 "0",
                 "scores.txt"
             ],
