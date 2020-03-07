@@ -30,7 +30,7 @@ int main(int argc, char const *argv[]) {
   read_SEQS(f1);
   fclose(f1);
   // set local/global
-  set_LOCAL(*argv[2] == '1' ? true : false);
+  set_ISLOCAL(*argv[2] == '1' ? true : false);
   // set scores
   if (argc == 4) {
     FILE *f2 = fopen(argv[3], "r");
