@@ -1,4 +1,9 @@
-# &ensp;Ace Cassidy &ensp;CPTS451 &ensp;HW4 &ensp;Spring'20
+---
+geometry: margin=2cm
+output: pdf_document
+---
+
+# &ensp; Ace Cassidy &ensp; CPTS451 &ensp; HW4 &ensp; Spring'20
 
 1. Find the distinct courses that “Software Engineering (SE)” track students in 'CptS'major are enrolled in. Return the major,  courseNo, and credits for those courses –sorted by major and courseNo.
 
@@ -79,9 +84,45 @@
 
 7. Find the courses which are prerequisites for more than 5 courses. Return the major, courseNo, and the number of the successor courses.
 
+   ```SQL
+   SELECT pre.coursemajor, pre.courseno, COUNT(course.precourseno)
+   FROM prereq as pre, prereq as course
+   WHERE    course.premajor = pre.coursemajor
+        AND course.precourseno = pre.courseno
+    GROUP BY (pre.coursemajor, pre.courseno)
+    HAVING COUNT(course.precourseno) > 5;
+    ```
+
 8. Find the 'CptS' major students who passed a course but failed the prerequisite of that course, i.e., got a grade lower than “2”. (For example, Alice (sid: 12583589) passed CptS355 but had a grade 1.75 in the prerequisite course CptS223.)  Return the names and sIDs of those students and the courseno of the course (i.e., the course whose prereq had a low grade).
 
+   ```SQL
+   SELECT student.sname, student.sid, enroll.coursemajor, enroll.courseno
+   FROM student, enroll, prereq, enroll as preenroll
+   WHERE    student.studentmajor='CptS'
+        AND enroll.sid = student.sid
+        AND enroll.coursemajor = prereq.coursemajor
+        AND enroll.courseno = prereq.courseno
+        AND enroll.grade >= 2
+        AND preenroll.sid = student.sid
+        AND preenroll.coursemajor = prereq.premajor
+        AND preenroll.courseno = prereq.precourseno
+        AND preenroll.grade < 2;
+    ```
+
 9. For each ‘CptS’ course, find the percentage of the students who passed the course. Assume a passing grade is 2 or above. (Note: Assume that students who didn’t earn a grade in class should be excluded in average calculation).
+
+    ```SQL
+    SELECT enroll.coursemajor, enroll.courseno,
+        round( avg
+            (case when grade > 2 then 100.0 else 0.0 end)
+        ,0) as passrate
+    FROM student, enroll
+    WHERE   enroll.sid = student.sid
+        AND enroll.coursemajor = 'CptS'
+        AND enroll.grade IS NOT NULL
+    GROUP BY (enroll.coursemajor, enroll.courseno)
+    ORDER BY enroll.courseno;
+    ```
 
 10. Write the equivalent SQL query for the following relational algebra expressions.
 
@@ -90,3 +131,18 @@
 * R2=σgpa>=2(γsID,avg(grade)->gpaR1 )) ⋈Student ⋈ Student.studentMajor=Majors.majorMajors
 
 * πsID,sName,studentMajor,description,gpa R2
+
+    ```SQL
+    SELECT student.sid, sname, studentmajor, description, gpa
+    FROM student, majors,
+        (SELECT enroll.sid , avg(enroll.grade) as gpa
+        FROM student, enroll
+        WHERE enroll.sid = student.sid
+            AND enroll.coursemajor = student.studentmajor
+        GROUP BY enroll.sid
+        HAVING avg(enroll.grade) >= 2
+        ) as passing
+    WHERE student.studentmajor = majors.major
+        AND student.sid=passing.sid
+    ORDER BY student.sid;
+    ```

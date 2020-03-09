@@ -88,7 +88,7 @@ WHERE   Emp.dno = Dept.dno AND Emp.ssn = ProjectEmp.ssn AND ProjectEmp.proj_id =
 -- querying for NULL values
 SELECT ename, sal
 FROM    Emp
-WHERE  sal<=50K     OR sal>50K; 
+WHERE  sal<=50000     OR sal>50000; 
 
 SELECT ename, sal
 FROM    Emp
@@ -103,7 +103,7 @@ ORDER BY dno, sal desc, ename;
 SELECT *
 FROM    Emp
 WHERE  sal<=50000 OR sal IS NULL
-ORDER BY dno NULLS FIRST, sal desc, ename;
+ORDER BY dno, sal desc, ename;
 
 --set operations
 (SELECT  ename FROM Emp, Dept 
@@ -170,7 +170,7 @@ FROM R,S,T
 WHERE R.A=S.A or R.A=T.A;
 ---------------------------------------
 
-Aggregation
+-- Aggregation
 
 SELECT MIN(sal), MAX(sal), AVG(sal)
 FROM   Emp, Dept
@@ -361,7 +361,7 @@ FROM Emp
 WHERE sal >= ANY
 		(SELECT sal
 		FROM Emp,  Dept
-		WHERE Emp.dno = Dept.dno AND  Dept.dname = 'Hardware' sal IS NOT NULL);
+		WHERE Emp.dno = Dept.dno AND  Dept.dname = 'Hardware' AND sal IS NOT NULL);
 
 SELECT ename,sal
 FROM Emp
