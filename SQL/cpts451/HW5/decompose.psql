@@ -1,0 +1,45 @@
+CREATE TABLE price (
+    pname varchar,
+    category varchar,
+    UNIQUE (pname, category),
+    price int
+);
+
+CREATE TABLE discount (
+    month varchar,
+    UNIQUE (month),
+    discount int
+);
+
+CREATE TABLE sales (
+    pname varchar,
+    category varchar,
+    month varchar,
+    PRIMARY KEY (pname, category, month),
+    FOREIGN KEY (pname, category) REFERENCES price (pname, category),
+    FOREIGN KEY (month) REFERENCES discount (month)
+);
+
+INSERT INTO price (pname, category, price)
+SELECT DISTINCT ON (pname, category)
+    pname,
+    category,
+    price
+FROM
+    mysales;
+
+INSERT INTO discount (month, discount)
+SELECT DISTINCT ON (month)
+    month,
+    discount
+FROM
+    mysales;
+
+INSERT INTO sales (pname, category, month)
+SELECT
+    pname,
+    category,
+    month
+FROM
+    mysales;
+

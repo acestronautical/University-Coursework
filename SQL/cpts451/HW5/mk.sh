@@ -12,4 +12,8 @@ echo 'csv start'
 psql --dbname=hw5 < csv.psql
 echo 'csv done'
 
+echo 'decompose start'
+psql --dbname=hw5 < decompose.psql
+echo 'decompose done'
+
 psql --dbname=hw5
