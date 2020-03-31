@@ -1,0 +1,10 @@
+CREATE TABLE mysales
+(
+    pname VARCHAR,
+    category VARCHAR,
+    price INT,
+    discount INT,
+    month VARCHAR
+);
+
+\copy mysales(pname, category, price, discount, month) FROM 'salesData.csv' DELIMITER ',' CSV;

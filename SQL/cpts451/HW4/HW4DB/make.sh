@@ -1,3 +1,5 @@
+#!/bin/bash
+
 psql --host=localhost --dbname=hw4 --username=postgres < schema.sql
 psql --host=localhost --dbname=hw4 --username=postgres < majors.sql
 psql --host=localhost --dbname=hw4 --username=postgres < course.sql
