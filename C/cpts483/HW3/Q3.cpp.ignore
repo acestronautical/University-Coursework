@@ -1,0 +1,3 @@
+// Write an LLVM pass to measure the time spend in each function. The measurement
+// should start before the first statement is executed and should end before the 
+// return statement.

@@ -20,3 +20,7 @@ int main(int argc, char *argv[]) {
 
   return 0;
 }
+
+// clang -O0 -Xclang -disable-O0-optnone -S -emit-llvm $1  -o test.ll && \
+// opt -load ~/repos/llvm-project/build/lib/LLVMHW3.so -HW -S test.ll  -o dev.ll && \
+// clang dev.ll

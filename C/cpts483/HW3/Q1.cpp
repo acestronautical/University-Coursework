@@ -1,3 +1,9 @@
+// Q1) Count the total number of add instructions executed in a program
+// print the o/p just before returning from main
+// The count is not per function, we  are  not  counting  the  total  number  of
+// add  instructions  a  program  (static),  the  total  number of add
+// instructions that were executed during the program execution (dynamic).
+
 #include "llvm/IR/Function.h"
 #include "llvm/IR/Module.h"
 #include "llvm/Pass.h"
@@ -14,102 +20,152 @@
 #include "llvm/ADT/SmallVector.h"
 #include "llvm/IR/GlobalVariable.h"
 
+#include "llvm/IR/IRBuilder.h"
+
 #include <iostream>
 using namespace llvm;
 
 namespace {
-struct Hello3 : public ModulePass {
+struct Pass483 : public ModulePass {
 
   static char ID;
-  Hello3() : ModulePass(ID) {}
+  Pass483() : ModulePass(ID) {}
+  virtual bool runOnModule(Module &M);                // when there is a Module
+  virtual bool runOnFunction(Function &F, Module &M); // called by runOnModule
+  virtual bool runOnBasicBlock(BasicBlock &B,
+                               Module &M); // called by runOnFunction
 
-  Constant *getConstUi64(int Val, LLVMContext &Context) {
-    IntegerType *Ui64Type = IntegerType::getInt64Ty(Context);
-    return ConstantInt::get(Ui64Type, Val);
-  }
-
-  AllocaInst *allocateCounter(Function &F, Module &M, LLVMContext &Context) {
-    Instruction *FirstInst = F.getEntryBlock().getFirstNonPHI();
-    IntegerType *Ui64Type = IntegerType::getInt64Ty(Context);
-    const DataLayout &DL = M.getDataLayout();
-
-    AllocaInst *CntrAllocaInst =
-        new AllocaInst(Ui64Type, DL.getAllocaAddrSpace(), "counter", FirstInst);
-
-    return CntrAllocaInst;
-  }
-
-  StoreInst *initCounter(AllocaInst *CntrAllocaInst, LLVMContext &Context) {
-    Instruction *NextInst = CntrAllocaInst->getNextNonDebugInstruction();
-    assert(NextInst != nullptr && "this cant be the end of a BB");
-    StoreInst *StoreZeroInst =
-        new StoreInst(getConstUi64(0, Context), CntrAllocaInst, NextInst);
-    return StoreZeroInst;
-  }
-
-  CastInst *createConstGlobalString(const char *GlobString,
-                                    LLVMContext &Context, Function &F) {
-    Constant *PrintStringConstant =
-        ConstantDataArray::getString(Context, GlobString);
-    GlobalVariable *GPrintVal = new GlobalVariable(
-        *F.getParent(), PrintStringConstant->getType(), true,
-        GlobalValue::PrivateLinkage, PrintStringConstant, ".strprint");
-
-    PointerType *I8PType = IntegerType::getInt8PtrTy(Context);
-    Instruction *FirstInst = F.getEntryBlock().getFirstNonPHI();
-    CastInst *CastToPtr =
-        CastInst::CreatePointerCast(GPrintVal, I8PType, "tmp", FirstInst);
-    return CastToPtr;
-  }
-
-  bool runOnModule(Module &M) override {
-    for (Function &F : M) {
-
-      if (F.isDeclaration()) {
-        errs() << "Continue\n";
-        continue;
-      }
-
-      LLVMContext &Context = F.getContext();
-
-      AllocaInst *CntrAllocaInst = allocateCounter(F, M, Context);
-      initCounter(CntrAllocaInst, Context);
-
-      IntegerType *Ui64Type = IntegerType::getInt64Ty(Context);
-      // IntegerType* I32Type = IntegerType::getInt32Ty(Context);
-      FunctionCallee Printfun = M.getFunction("printf");
-      // getOrInsertFunction("printf",
-      //                 FunctionType::get(I32Type, I8p, true));
-      CastInst *PrintfStr = createConstGlobalString(
-          "Total number of add operations  is %d\n", Context, F);
-
-
-      for (BasicBlock &B : F) {
-        for (Instruction &I : B) {
-          if (I.getOpcode() == Instruction::Add) {
-            LoadInst *LoadInstTmp =
-                new LoadInst(Ui64Type, CntrAllocaInst, "ctrload", &I);
-            BinaryOperator *AddInstTmp = BinaryOperator::Create(
-                Instruction::Add, getConstUi64(1, Context), LoadInstTmp,
-                "counterinc", &I);
-            new StoreInst(AddInstTmp, CntrAllocaInst, &I);
-          } else if (isa<ReturnInst>(I)) {
-
-            LoadInst *LoadInstTmp =
-                new LoadInst(Ui64Type, CntrAllocaInst, "ctrload", &I);
-            ArrayRef<Value *> Args{PrintfStr,  LoadInstTmp};
-
-            CallInst::Create(Printfun, Args, "call483", &I);
-          }
-        }
-      }
-    }
-    return true;
-  }
+  bool setup(Module &M);    // create global variables
+  bool teardown(Module &M); // print stuff
 };
 } // namespace
 
-char Hello3::ID = 0;
-static RegisterPass<Hello3> X("HW", "3rd 483 pass",
-                              false /* Only looks at CFG */,
-                              false /* Analysis Pass */);
+//////// runOnModule: runs for each module, overrides class builtin
+//
+bool Pass483::runOnModule(Module &M) {
+  // modified tracks whether something was modified
+  bool modified = setup(M);
+  for (Function &F : M) {
+    // or equals to always be true if any are true
+    modified |= runOnFunction(F, M);
+  }
+  modified |= teardown(M);
+  return modified;
+}
+
+//////// runOnFunction: runs for each functions, overrides class builtin
+// called by runOnModule
+bool Pass483::runOnFunction(Function &F, Module &M) {
+  // track if if any modifications made
+  bool modified = false;
+
+  if (F.isDeclaration()) {
+    errs() << "Continue\n";
+    return modified;
+  }
+
+  for (BasicBlock &B : F) {
+    modified |= runOnBasicBlock(B, M);
+  }
+  return modified;
+}
+
+//////// runOnBasicBlock: runs for each basic block, overrides class builtin
+// called by runOnFunction
+bool Pass483::runOnBasicBlock(BasicBlock &B, Module &M) {
+  // declare easier types
+  Type *I64Ty = Type::getInt64Ty(M.getContext());
+
+  Constant *instrCounter = M.getOrInsertGlobal("addCounter", I64Ty);
+
+  for (Instruction &I : B) {                 // for each instruction in block
+    if (I.getOpcode() == Instruction::Add) { // if add instruction
+      // load counter value before current instruction
+      LoadInst *LoadInstTmp = new LoadInst(I64Ty, instrCounter, "ctrload", &I);
+      // add one to counter
+      BinaryOperator *AddInstTmp =
+          BinaryOperator::Create(Instruction::Add, ConstantInt::get(I64Ty, 1),
+                                 LoadInstTmp, "counterinc", &I);
+      // store value back to counter
+      new StoreInst(AddInstTmp, instrCounter, &I);
+    }
+  }
+  return true;
+}
+
+//////// setup: creates global values
+// called by runOnModule
+bool Pass483::setup(Module &M) {
+  Function *mainFunc = M.getFunction("main");
+  // not the main module
+  if (!mainFunc)
+    return false;
+
+  // Create  counter global variable;
+  Type *I64Ty = Type::getInt64Ty(M.getContext());
+  new GlobalVariable(M, I64Ty, false, GlobalValue::CommonLinkage,
+                     ConstantInt::get(I64Ty, 0), "addCounter");
+
+  return true;
+}
+
+//////// teardown: prints results
+// called at end of runOnModule
+bool Pass483::teardown(Module &M) {
+
+  IRBuilder<> Builder(M.getContext());
+  Function *mainFunc = M.getFunction("main");
+
+  // must be in main context
+  if (!mainFunc)
+    return false;
+
+  // Build printf function handle
+  std::vector<Type *> FTyArgs;
+  FTyArgs.push_back(Type::getInt8PtrTy(
+      M.getContext())); // specify the first argument, i8* is the return type of
+                        // CreateGlobalStringPtr
+  FunctionType *FTy =
+      FunctionType::get(Type::getInt32Ty(M.getContext()), FTyArgs,
+                        true); // create function type with return type,
+                               // argument types and if const argument
+  FunctionCallee printF = M.getOrInsertFunction(
+      "printf", FTy); // create function if not extern or defined
+
+  // assert(printF != NULL);
+
+  for (auto bb = mainFunc->begin(); bb != mainFunc->end(); bb++) {
+    for (auto it = bb->begin(); it != bb->end(); it++) {
+      // insert at the end of main function
+      if ((std::string)it->getOpcodeName() == "ret") {
+        // insert printf at the end of main function, before return function
+        Builder.SetInsertPoint(&*bb, it);
+
+        // Build Arguments
+        // create global string variable formatStr
+        Value *formatStr = Builder.CreateGlobalStringPtr(
+            "\n\n addCounter: %d\n", "addCounter");
+        // printf will need a vector of args
+        std::vector<Value *> argVec;
+        argVec.push_back(formatStr);
+
+        // get pointer pointing to the global variable name
+        Value *addCounter = M.getGlobalVariable("addCounter");
+        // addCounter only points to a string, but we want to print the number
+        // the string stores
+        Value *addValue =
+            new LoadInst(addCounter, addCounter->getName() + ".val", &*it);
+        argVec.push_back(addValue);
+        // create printf function with the return value name called printf (with
+        // suffix if already exists)
+        CallInst::Create(printF, argVec, "printf", &*it);
+      }
+    }
+  }
+  return true;
+}
+
+char Pass483::ID = 0;
+static RegisterPass<Pass483> X("HW", "483 HW3 passes",
+                               false /* Only looks at CFG */,
+                               false /* Analysis Pass */);
