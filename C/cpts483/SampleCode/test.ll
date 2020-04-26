@@ -40,49 +40,62 @@ entry:
 }
 
 ; Function Attrs: noinline nounwind uwtable
+define dso_local i32 @slow_func() #0 {
+entry:
+  %a = alloca i32, align 4
+  %i = alloca i32, align 4
+  store i32 0, i32* %a, align 4
+  store i32 0, i32* %i, align 4
+  br label %for.cond
+
+for.cond:                                         ; preds = %for.inc, %entry
+  %0 = load i32, i32* %i, align 4
+  %cmp = icmp slt i32 %0, 999999
+  br i1 %cmp, label %for.body, label %for.end
+
+for.body:                                         ; preds = %for.cond
+  %1 = load i32, i32* %a, align 4
+  %2 = load i32, i32* %i, align 4
+  %3 = load i32, i32* %a, align 4
+  %4 = load i32, i32* %i, align 4
+  %sub = sub nsw i32 %3, %4
+  %mul = mul nsw i32 %2, %sub
+  %add = add nsw i32 %1, %mul
+  store i32 %add, i32* %a, align 4
+  br label %for.inc
+
+for.inc:                                          ; preds = %for.body
+  %5 = load i32, i32* %i, align 4
+  %inc = add nsw i32 %5, 1
+  store i32 %inc, i32* %i, align 4
+  br label %for.cond
+
+for.end:                                          ; preds = %for.cond
+  %6 = load i32, i32* %a, align 4
+  ret i32 %6
+}
+
+; Function Attrs: noinline nounwind uwtable
 define dso_local i32 @main(i32 %argc, i8** %argv) #0 {
 entry:
   %retval = alloca i32, align 4
   %argc.addr = alloca i32, align 4
   %argv.addr = alloca i8**, align 8
   %s = alloca i32, align 4
-  %i = alloca i32, align 4
   store i32 0, i32* %retval, align 4
   store i32 %argc, i32* %argc.addr, align 4
   store i8** %argv, i8*** %argv.addr, align 8
   store i32 0, i32* %s, align 4
-  store i32 0, i32* %i, align 4
-  br label %for.cond
-
-for.cond:                                         ; preds = %for.inc, %entry
-  %0 = load i32, i32* %i, align 4
-  %1 = load i32, i32* %argc.addr, align 4
-  %cmp = icmp slt i32 %0, %1
-  br i1 %cmp, label %for.body, label %for.end
-
-for.body:                                         ; preds = %for.cond
-  %2 = load i32, i32* %i, align 4
-  %3 = load i32, i32* %i, align 4
-  %call = call i32 @add_2(i32 %2, i32 %3)
-  %4 = load i32, i32* %s, align 4
-  %add = add nsw i32 %4, %call
+  %0 = load i32, i32* %s, align 4
+  %call = call i32 @add_2(i32 2, i32 3)
+  %add = add nsw i32 %0, %call
   store i32 %add, i32* %s, align 4
-  %5 = load i32, i32* %i, align 4
-  %6 = load i32, i32* %i, align 4
-  %7 = load i32, i32* %i, align 4
-  %call1 = call i32 @add_3(i32 %5, i32 %6, i32 %7)
-  %8 = load i32, i32* %s, align 4
-  %add2 = add nsw i32 %8, %call1
+  %1 = load i32, i32* %s, align 4
+  %call1 = call i32 @add_3(i32 4, i32 5, i32 6)
+  %add2 = add nsw i32 %1, %call1
   store i32 %add2, i32* %s, align 4
-  br label %for.inc
-
-for.inc:                                          ; preds = %for.body
-  %9 = load i32, i32* %i, align 4
-  %inc = add nsw i32 %9, 1
-  store i32 %inc, i32* %i, align 4
-  br label %for.cond
-
-for.end:                                          ; preds = %for.cond
+  %call3 = call i32 @slow_func()
+  store i32 %call3, i32* %s, align 4
   ret i32 0
 }
 

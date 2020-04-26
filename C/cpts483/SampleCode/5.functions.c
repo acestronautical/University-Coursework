@@ -10,13 +10,19 @@ int add_3(int a, int b, int c) {
   return temp;
 }
 
+int slow_func() {
+  int a = 0;
+  for (int i = 0; i < 999999; i++)
+    a = a + i * (a - i);
+  return a;
+};
+
 int main(int argc, char *argv[]) {
   int s = 0;
 
-    s = s + add_2(2, 3);
-    s = s + add_3(4, 5, 6);
-  
-
+  s = s + add_2(2, 3);
+  s = s + add_3(4, 5, 6);
+  s = slow_func();
   return 0;
 }
 
