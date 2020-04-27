@@ -1,3 +1,3 @@
 #!/bin/bash
 
-clear && gcc -pthread -g chan/*.c *.c
+clear && gcc -pthread -g src/chan/*.c src/lex/*.c src/*.c

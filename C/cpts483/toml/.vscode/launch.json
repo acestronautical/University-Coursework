@@ -10,7 +10,7 @@
             "request": "launch",
             "program": "${workspaceFolder}/a.out",
             "args": [
-                "test.toml"
+                "sample.json"
             ],
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}",
